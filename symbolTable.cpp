@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <string>
 using namespace std;
 
 class SymbolInfo{
@@ -36,7 +37,6 @@ SymbolInfo::~SymbolInfo()
     {
         if(curr == NULL)
         {
-            delete curr;
             break;
         }
         SymbolInfo * next = curr -> getNext();
@@ -74,7 +74,7 @@ class ScopeTable
         ScopeTable * getParent() { return parentScope; }
 
         void setID(string i) { id = i; }
-        void setParent(ScopeTable * parent){ parentScope = parentScope; }
+        void setParent(ScopeTable * parent){ parentScope = parent; }
 
         //the main functions
         SymbolInfo * Lookup(string);
@@ -183,6 +183,7 @@ bool ScopeTable::Delete(string key)
 
 void ScopeTable::Print()
 {
+    cout << "ScopeTable # " << id << endl;
     for(int i = 0; i < bucket_size; i++)
     {
         cout << i << " -->  ";
@@ -195,6 +196,7 @@ void ScopeTable::Print()
         }
         cout << endl;
     }
+    cout << endl << endl;
 }
 
 
@@ -207,27 +209,123 @@ void ScopeTable::Print()
 
 class SymbolTable
 {
-    vector<ScopeTable> scopeTables;
     ScopeTable * currentScopeTable;
+    int bucket_size;
+    int relative_id;
 
     public:
         SymbolTable();
+        SymbolTable(int n);
         ~SymbolTable();
 
+        //main functions
+        void EnterScope();
+        void ExitScope();
+        bool Insert(string, string);
+        bool Remove(string);
+        SymbolInfo * Lookup(string);
+        void PrintCurrentScope();
+        void PrintAllScopes();
 };
 
 
-SymbolTable::SymbolTable()
+
+SymbolTable::SymbolTable(){}
+
+SymbolTable::SymbolTable(int n)
 {
-    currentScopeTable = NULL;
+    bucket_size = n;
+    relative_id = 1;
+
+    //globalScope
+    currentScopeTable = new ScopeTable(bucket_size);
+    currentScopeTable -> setID("1");
+    currentScopeTable -> setParent(NULL);
+
 }
 
 SymbolTable::~SymbolTable()
 {
-    delete currentScopeTable;
+    ScopeTable * parent = NULL;
+    while(1)
+    {
+        if(currentScopeTable == NULL)
+        {
+            break;
+        }
+        parent = currentScopeTable -> getParent();
+        delete currentScopeTable;
+        currentScopeTable = parent;
+    }
 }
 
 
+void SymbolTable::EnterScope()
+{
+    //new scope
+    ScopeTable * temp = new ScopeTable(bucket_size);
+    temp ->setParent(currentScopeTable);
+    string id = currentScopeTable -> getID() + "." + to_string(relative_id);
+    temp -> setID(id);
+
+    currentScopeTable = temp;
+    relative_id = 1;
+
+}
+
+void SymbolTable::ExitScope()
+{
+    //if currentScope is not Global
+    if(currentScopeTable -> getParent() != NULL)
+    {
+        string id = currentScopeTable ->getID();
+        id = id[id.length() - 1];
+        relative_id = stoi(id) + 1;
+
+        currentScopeTable = currentScopeTable -> getParent();
+    }
+}
+
+bool SymbolTable::Insert(string key, string type)
+{
+    return currentScopeTable ->Insert(key, type);
+}
+
+bool SymbolTable::Remove(string key)
+{
+    return currentScopeTable -> Delete(key);
+}
+
+SymbolInfo * SymbolTable::Lookup(string key)
+{
+    ScopeTable * curr = currentScopeTable;
+    SymbolInfo * temp = NULL;
+    while(curr != NULL)
+    {
+        temp = curr -> Lookup(key);
+        if(temp != NULL)
+        {
+            break;
+        }
+        curr = curr -> getParent();
+    }
+    return temp;
+}
+
+void SymbolTable::PrintCurrentScope()
+{
+    currentScopeTable -> Print();
+}
+
+void SymbolTable::PrintAllScopes()
+{
+    ScopeTable * curr = currentScopeTable;
+    while(curr != NULL)
+    {
+        curr -> Print();
+        curr = curr -> getParent();
+    }
+}
 
 
 
@@ -240,19 +338,12 @@ SymbolTable::~SymbolTable()
 
 int main()
 {
-	SymbolInfo s;
-	s.setName("kire");
-	s.setType("string");
-	cout << s.getName() << endl;
-    ScopeTable st(10);
-    cout << st.Insert("haha", "goesbrrr") << endl;
-    st.Insert("gaia", "stons");
-    st.Insert("aagi", "huhu");
-    st.Print();
-    st.Delete("aagi");
-    st.Delete("gaia");
-    st.Delete("haha");
-    st.Delete("haha");
-    st.Print();
-	return 0;
+    SymbolTable * ss = new SymbolTable(10);
+    ss -> Insert("a","a");
+    ss ->EnterScope();
+    ss ->Insert("h", "h");
+    ss->EnterScope();
+    ss ->Insert("o","o");
+    ss ->PrintAllScopes();
+    return 0;
 }
