@@ -31,7 +31,18 @@ SymbolInfo::SymbolInfo(string n, string k)
 
 SymbolInfo::~SymbolInfo()
 {
-    delete next; //needs upgrade
+    SymbolInfo * curr = next;
+    while(1)
+    {
+        if(curr == NULL)
+        {
+            delete curr;
+            break;
+        }
+        SymbolInfo * next = curr -> getNext();
+        delete curr;
+        curr = next;
+    }
 }
 
 
@@ -84,6 +95,7 @@ ScopeTable::ScopeTable(int n)
 	parentScope = NULL;
 }
 
+
 ScopeTable::~ScopeTable()
 {
 	for(int i = 0; i < bucket_size; i++)
@@ -115,7 +127,7 @@ SymbolInfo* ScopeTable::Lookup(string key)
 
 bool ScopeTable::Insert(string key, string type)
 {
-    if(Lookup(key) == NULL) return false;
+    if(Lookup(key) != NULL) return false;
     int index = hash_fuc(key);
     SymbolInfo * p = new SymbolInfo(key, type);
 
@@ -171,8 +183,26 @@ bool ScopeTable::Delete(string key)
 
 void ScopeTable::Print()
 {
-
+    for(int i = 0; i < bucket_size; i++)
+    {
+        cout << i << " -->  ";
+        SymbolInfo * curr = scope_array[i];
+        while(1)
+        {
+            if(curr == NULL) break;
+            cout << "< " << curr -> getName() << " : " << curr -> getType() << " >  ";
+            curr = curr -> getNext();
+        }
+        cout << endl;
+    }
 }
+
+
+
+
+
+
+
 
 
 class SymbolTable
@@ -198,6 +228,16 @@ SymbolTable::~SymbolTable()
 }
 
 
+
+
+
+
+
+
+
+
+
+
 int main()
 {
 	SymbolInfo s;
@@ -205,5 +245,14 @@ int main()
 	s.setType("string");
 	cout << s.getName() << endl;
     ScopeTable st(10);
+    cout << st.Insert("haha", "goesbrrr") << endl;
+    st.Insert("gaia", "stons");
+    st.Insert("aagi", "huhu");
+    st.Print();
+    st.Delete("aagi");
+    st.Delete("gaia");
+    st.Delete("haha");
+    st.Delete("haha");
+    st.Print();
 	return 0;
 }
