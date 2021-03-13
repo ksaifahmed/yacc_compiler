@@ -33,7 +33,7 @@ SymbolInfo::SymbolInfo(string n, string k)
 SymbolInfo::~SymbolInfo()
 {
     SymbolInfo * curr = next;
-    while(1)
+    while(true)
     {
         if(curr == NULL)
         {
@@ -78,6 +78,7 @@ class ScopeTable
 
         //the main functions
         SymbolInfo * Lookup(string);
+        SymbolInfo * LookupWithPrint(string);
         bool Insert(string, string);
         void Print();
         bool Delete(string);
@@ -112,7 +113,7 @@ SymbolInfo* ScopeTable::Lookup(string key)
 {
     int index = hash_fuc(key);
     SymbolInfo * curr = scope_array[index];
-    while(1)
+    while(true)
     {
         if(curr == NULL) break;
         if(!key.compare(curr -> getName()))
@@ -121,14 +122,37 @@ SymbolInfo* ScopeTable::Lookup(string key)
         }
         curr = curr -> getNext();
     }
+    return NULL;
+}
 
+SymbolInfo* ScopeTable::LookupWithPrint(string key)
+{
+    int index = hash_fuc(key);
+    int chain_position = 0;
+    SymbolInfo * curr = scope_array[index];
+    while(true)
+    {
+        if(curr == NULL) break;
+        if(!key.compare(curr -> getName()))
+        {
+            cout << "Found in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl;
+            return curr;
+        }
+        chain_position++;
+        curr = curr -> getNext();
+    }
     return NULL;
 }
 
 bool ScopeTable::Insert(string key, string type)
 {
-    if(Lookup(key) != NULL) return false;
+    if(Lookup(key) != NULL)
+    {
+        cout << "<" << key << "," << type << "> already exists in current ScopeTable" << endl;
+        return false;
+    }
     int index = hash_fuc(key);
+    int chain_position = 0;
     SymbolInfo * p = new SymbolInfo(key, type);
 
     if(scope_array[index] == NULL)
@@ -138,8 +162,9 @@ bool ScopeTable::Insert(string key, string type)
     else
     {
         SymbolInfo * curr = scope_array[index];
-        while(1)
+        while(true)
         {
+            chain_position++;
             if(curr -> getNext() == NULL)
             {
                 curr -> setNext(p);
@@ -148,21 +173,28 @@ bool ScopeTable::Insert(string key, string type)
             curr = curr -> getNext();
         }
     }
+    cout << "Inserted in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl;
     return true;
 }
 
 
 bool ScopeTable::Delete(string key)
 {
-    if(Lookup(key) == NULL) return false;
+    if(Lookup(key) == NULL)
+    {
+        cout << "Not found" << endl;
+        cout << key << " not found" << endl << endl;
+        return false;
+    }
     int index = hash_fuc(key);
+    int chain_position = 0;
 
     SymbolInfo * curr = scope_array[index];
     SymbolInfo * prev = NULL;
 
-    while(1)
+    while(true)
     {
-        if(curr == NULL) return false;
+        //if(curr == NULL) return false;
         if(!key.compare(curr -> getName()))
         {
             if(prev == NULL)
@@ -175,9 +207,11 @@ bool ScopeTable::Delete(string key)
             }
             break;
         }
+        chain_position++;
         prev = curr;
         curr = curr -> getNext();
     }
+    cout << "Found in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl;
     return true;
 }
 
@@ -188,7 +222,7 @@ void ScopeTable::Print()
     {
         cout << i << " -->  ";
         SymbolInfo * curr = scope_array[i];
-        while(1)
+        while(true)
         {
             if(curr == NULL) break;
             cout << "< " << curr -> getName() << " : " << curr -> getType() << " >  ";
@@ -247,7 +281,7 @@ SymbolTable::SymbolTable(int n)
 SymbolTable::~SymbolTable()
 {
     ScopeTable * parent = NULL;
-    while(1)
+    while(true)
     {
         if(currentScopeTable == NULL)
         {
@@ -271,6 +305,8 @@ void SymbolTable::EnterScope()
     currentScopeTable = temp;
     relative_id = 1;
 
+    cout << "New ScopeTable with id " << id <<" created" << endl;
+
 }
 
 void SymbolTable::ExitScope()
@@ -278,7 +314,9 @@ void SymbolTable::ExitScope()
     //if currentScope is not Global
     if(currentScopeTable -> getParent() != NULL)
     {
-        string id = currentScopeTable ->getID();
+        string id = currentScopeTable -> getID();
+        cout << "ScopeTable with id " << id <<" removed" << endl;
+
         id = id[id.length() - 1];
         relative_id = stoi(id) + 1;
 
@@ -288,7 +326,7 @@ void SymbolTable::ExitScope()
 
 bool SymbolTable::Insert(string key, string type)
 {
-    return currentScopeTable ->Insert(key, type);
+    return currentScopeTable -> Insert(key, type);
 }
 
 bool SymbolTable::Remove(string key)
@@ -302,13 +340,14 @@ SymbolInfo * SymbolTable::Lookup(string key)
     SymbolInfo * temp = NULL;
     while(curr != NULL)
     {
-        temp = curr -> Lookup(key);
+        temp = curr -> LookupWithPrint(key);
         if(temp != NULL)
         {
             break;
         }
         curr = curr -> getParent();
     }
+    if(temp == NULL) cout << "Not found" << endl;
     return temp;
 }
 
@@ -338,12 +377,63 @@ void SymbolTable::PrintAllScopes()
 
 int main()
 {
-    SymbolTable * ss = new SymbolTable(10);
-    ss -> Insert("a","a");
-    ss ->EnterScope();
-    ss ->Insert("h", "h");
-    ss->EnterScope();
-    ss ->Insert("o","o");
-    ss ->PrintAllScopes();
+    //buc_size
+    int n;
+    SymbolTable * symbolTable;
+
+    cin >> n;
+    symbolTable = new SymbolTable(n);
+
+    string inp;
+    string name, type;
+    string printComm;
+
+
+    while(true)
+    {
+        cin >> inp;
+        if(!inp.compare("I"))
+        {
+            cin >> name >> type;
+            cout << inp << " " << name << " " << " " << endl;
+            symbolTable -> Insert(name, type);
+        }
+        else if(!inp.compare("L"))
+        {
+            cin >> name;
+            cout << inp << " " << name << endl;
+            symbolTable -> Lookup(name);
+        }
+        else if(!inp.compare("D"))
+        {
+            cin >> name;
+            cout << inp << " " << name << endl;
+            symbolTable -> Remove(name);
+        }
+        else if(!inp.compare("P"))
+        {
+            cin >> printComm;
+            cout << inp << " " << name << " " << " " << endl;
+            if(!printComm.compare("A")) symbolTable -> PrintAllScopes();
+            else if(!printComm.compare("C")) symbolTable -> PrintCurrentScope();
+        }
+        else if(!inp.compare("S"))
+        {
+            cout << inp << endl;
+            symbolTable -> EnterScope();
+        }
+        else if(!inp.compare("E"))
+        {
+            cout << inp << endl;
+            symbolTable -> ExitScope();
+        }
+        else
+        {
+            cout << "Invalid Input; Program Ended!" << endl;
+            break;
+        }
+    }
+
+
     return 0;
 }
