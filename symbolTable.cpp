@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include <string>
+#include <cstring>
 using namespace std;
 
 class SymbolInfo{
@@ -146,9 +146,10 @@ SymbolInfo* ScopeTable::LookupWithPrint(string key)
 
 bool ScopeTable::Insert(string key, string type)
 {
-    if(Lookup(key) != NULL)
+    SymbolInfo * curr = Lookup(key);
+    if(curr != NULL)
     {
-        cout << "<" << key << "," << type << "> already exists in current ScopeTable" << endl << endl;
+        cout << "<" << curr -> getName() << "," << curr -> getType() << "> already exists in current ScopeTable" << endl << endl;
         return false;
     }
     int index = hash_fuc(key);
@@ -391,9 +392,10 @@ int main()
     string printComm;
 
 
-    while(!feof(stdin))
+    while(1)
     {
         cin >> inp;
+        if(feof(stdin)) break;
         if(!inp.compare("I"))
         {
             cin >> name >> type;
