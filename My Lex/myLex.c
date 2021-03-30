@@ -387,8 +387,8 @@ static const flex_int16_t yy_accept[105] =
     {   0,
         0,    0,   47,   45,    1,    2,   35,   33,   45,   36,
        37,   31,   29,   42,   30,   32,   43,   27,   34,   28,
-       45,   40,   41,   45,   45,   45,   45,   45,   45,   45,
-       45,   45,   45,   38,   45,   39,    1,   26,   22,   19,
+       44,   40,   41,   44,   44,   44,   44,   44,   44,   44,
+       44,   44,   44,   38,   45,   39,    1,   26,   22,   19,
        20,   23,   25,   24,   44,   44,   44,   44,   44,   44,
         5,   44,   44,   44,    3,   44,   44,   44,   44,   44,
        21,   44,   44,   44,   44,   44,   44,   44,   44,    4,
@@ -410,7 +410,7 @@ static const YY_CHAR yy_ec[256] =
        17,   18,    1,    1,   19,   19,   19,   19,   19,   19,
        19,   19,   19,   19,   19,   19,   19,   19,   19,   19,
        19,   19,   19,   19,   19,   19,   19,   19,   19,   19,
-       20,    1,   21,    1,    1,    1,   22,   23,   24,   25,
+       20,    1,   21,    1,   19,    1,   22,   23,   24,   25,
 
        26,   27,   19,   28,   29,   19,   30,   31,   19,   32,
        33,   19,   19,   34,   35,   36,   37,   38,   39,   19,
@@ -540,13 +540,29 @@ char *yytext;
 #include<stdio.h>
 #include<stdlib.h>
 #include "symboltable.h"
+#include<string>
 
 int line_count = 1;
-FILE *log_fp=fopen("log.txt","w");
-FILE *token_fp=fopen("token.txt","w");
+FILE *token_fp = fopen("token.txt","w");
 SymbolTable symbolTable(10);
-#line 549 "myLex.c"
-#line 550 "myLex.c"
+
+void printkeywords(const char* str)
+{	
+	fprintf(token_fp,"<%s> ", str);
+	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+}
+void printOperators(const char* str)
+{
+	fprintf(token_fp, "<%s, %s> ", str, yytext);
+	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+}
+void indentifier()
+{
+	fprintf(token_fp, "<ID, %s> ", yytext);
+	printf("Line no %d: Token <ID> Lexeme %s found\n\n", line_count, yytext);
+}	
+#line 565 "myLex.c"
+#line 566 "myLex.c"
 
 #define INITIAL 0
 
@@ -763,9 +779,9 @@ YY_DECL
 		}
 
 	{
-#line 19 "myLex.l"
+#line 36 "myLex.l"
 
-#line 769 "myLex.c"
+#line 785 "myLex.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -834,236 +850,236 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 20 "myLex.l"
+#line 37 "myLex.l"
 {}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 21 "myLex.l"
+#line 38 "myLex.l"
 {line_count++;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 22 "myLex.l"
-{fprintf(token_fp, "<IF> ");}
+#line 39 "myLex.l"
+{printkeywords("IF");}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 23 "myLex.l"
-{fprintf(token_fp, "<FOR> ");}
+#line 40 "myLex.l"
+{printkeywords("FOR");}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 24 "myLex.l"
-{fprintf(token_fp, "<DO> ");}
+#line 41 "myLex.l"
+{printkeywords("DO");}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 25 "myLex.l"
-{fprintf(token_fp, "<INT> ");}
+#line 42 "myLex.l"
+{printkeywords("INT");}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "myLex.l"
-{fprintf(token_fp, "<FLOAT> ");}
+#line 43 "myLex.l"
+{printkeywords("FLOAT");}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 27 "myLex.l"
-{fprintf(token_fp, "<VOID> ");}
+#line 44 "myLex.l"
+{printkeywords("VOID");}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 28 "myLex.l"
-{fprintf(token_fp, "<SWITCH> ");}
+#line 45 "myLex.l"
+{printkeywords("SWITCH");}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "myLex.l"
-{fprintf(token_fp, "<DEFAULT> ");}
+#line 46 "myLex.l"
+{printkeywords("DEFAULT");}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 30 "myLex.l"
-{fprintf(token_fp, "<ELSE> ");}
+#line 47 "myLex.l"
+{printkeywords("ELSE");}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 31 "myLex.l"
-{fprintf(token_fp, "<WHILE> ");}
+#line 48 "myLex.l"
+{printkeywords("WHILE");}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 32 "myLex.l"
-{fprintf(token_fp, "<BREAK> ");}
+#line 49 "myLex.l"
+{printkeywords("BREAK");}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 33 "myLex.l"
-{fprintf(token_fp, "<CHAR> ");}
+#line 50 "myLex.l"
+{printkeywords("CHAR");}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 34 "myLex.l"
-{fprintf(token_fp, "<DOUBLE> ");}
+#line 51 "myLex.l"
+{printkeywords("DOUBLE");}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 35 "myLex.l"
-{fprintf(token_fp, "<RETURN> ");}
+#line 52 "myLex.l"
+{printkeywords("RETURN");}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 36 "myLex.l"
-{fprintf(token_fp, "<CASE> ");}
+#line 53 "myLex.l"
+{printkeywords("CASE");}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 37 "myLex.l"
-{fprintf(token_fp, "<CONTINUE> ");}
+#line 54 "myLex.l"
+{printkeywords("CONTINUE");}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 38 "myLex.l"
-{fprintf(token_fp, "<INCOP, %s> ", yytext);}
+#line 55 "myLex.l"
+{printOperators("INCOP");}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 39 "myLex.l"
-{fprintf(token_fp, "<INCOP, %s> ", yytext);}
+#line 56 "myLex.l"
+{printOperators("INCOP");}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 40 "myLex.l"
-{fprintf(token_fp, "<LOGICOP, %s> ", yytext);}
+#line 57 "myLex.l"
+{printOperators("LOGICOP");}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 41 "myLex.l"
-{fprintf(token_fp, "<LOGICOP, %s> ", yytext);}
+#line 58 "myLex.l"
+{printOperators("LOGICOP");}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 42 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 59 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 43 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 60 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 44 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 61 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 45 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 62 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 46 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 63 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 47 "myLex.l"
-{fprintf(token_fp, "<RELOP, %s> ", yytext);}
+#line 64 "myLex.l"
+{printOperators("RELOP");}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 48 "myLex.l"
-{fprintf(token_fp, "<ADDOP, %s> ", yytext);}
+#line 65 "myLex.l"
+{printOperators("ADDOP");}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 49 "myLex.l"
-{fprintf(token_fp, "<ADDOP, %s> ", yytext);}
+#line 66 "myLex.l"
+{printOperators("ADDOP");}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 50 "myLex.l"
-{fprintf(token_fp, "<MULOP, %s> ", yytext);}
+#line 67 "myLex.l"
+{printOperators("MULOP");}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 51 "myLex.l"
-{fprintf(token_fp, "<MULOP, %s> ", yytext);}
+#line 68 "myLex.l"
+{printOperators("MULOP");}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 52 "myLex.l"
-{fprintf(token_fp, "<MULOP, %s> ", yytext);}
+#line 69 "myLex.l"
+{printOperators("MULOP");}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 53 "myLex.l"
-{fprintf(token_fp, "<ASSIGNOP, %s> ", yytext);}
+#line 70 "myLex.l"
+{printOperators("ASSIGNOP");}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 54 "myLex.l"
-{fprintf(token_fp, "<NOT, %s> ", yytext);}
+#line 71 "myLex.l"
+{printOperators("NOT");}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 55 "myLex.l"
-{fprintf(token_fp, "<LPAREN, %s> ", yytext);}
+#line 72 "myLex.l"
+{printOperators("LPAREN");}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 56 "myLex.l"
-{fprintf(token_fp, "<RPAREN, %s> ", yytext);}
+#line 73 "myLex.l"
+{printOperators("RPAREN");}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 57 "myLex.l"
-{fprintf(token_fp, "<LCURL, %s> ", yytext); symbolTable.EnterScope();}
+#line 74 "myLex.l"
+{printOperators("LCURL"); symbolTable.EnterScope();}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 58 "myLex.l"
-{fprintf(token_fp, "<RCURL, %s> ", yytext); symbolTable.ExitScope();}
+#line 75 "myLex.l"
+{printOperators("RCURL"); symbolTable.ExitScope();}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 59 "myLex.l"
-{fprintf(token_fp, "<LTHIRD, %s> ", yytext);}
+#line 76 "myLex.l"
+{printOperators("LTHIRD");}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 60 "myLex.l"
-{fprintf(token_fp, "<RTHIRD, %s> ", yytext);}
+#line 77 "myLex.l"
+{printOperators("RTHIRD");}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 61 "myLex.l"
-{fprintf(token_fp, "<COMMA, %s> ", yytext);}
+#line 78 "myLex.l"
+{printOperators("COMMA");}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 62 "myLex.l"
-{fprintf(token_fp, "<SEMICOLON, %s> ", yytext);}
+#line 79 "myLex.l"
+{printOperators("SEMICOLON");}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 64 "myLex.l"
-{printf("%s matched as Identifier rule\n",yytext);}
+#line 80 "myLex.l"
+{indentifier();}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 65 "myLex.l"
+#line 81 "myLex.l"
 {printf("Mysterious character %s found\n",yytext);}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 66 "myLex.l"
+#line 82 "myLex.l"
 ECHO;
 	YY_BREAK
-#line 1067 "myLex.c"
+#line 1083 "myLex.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2080,7 +2096,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 66 "myLex.l"
+#line 82 "myLex.l"
 
 int main(int argc,char *argv[]){
 	
@@ -2094,12 +2110,13 @@ int main(int argc,char *argv[]){
 		printf("Cannot open specified file\n");
 		return 0;
 	}
-	
+	freopen("log.txt","w",stdout);
 
+	
 	yyin= fin;
 	yylex();
 	fclose(yyin);
-	fclose(log_fp);
+	fclose(stdout);
 	fclose(token_fp);
 	return 0;
 }

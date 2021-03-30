@@ -4,64 +4,80 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include "symboltable.h"
+#include<string>
 
 int line_count = 1;
-FILE *log_fp=fopen("log.txt","w");
-FILE *token_fp=fopen("token.txt","w");
+FILE *token_fp = fopen("token.txt","w");
 SymbolTable symbolTable(10);
+
+void printkeywords(const char* str)
+{	
+	fprintf(token_fp,"<%s> ", str);
+	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+}
+void printOperators(const char* str)
+{
+	fprintf(token_fp, "<%s, %s> ", str, yytext);
+	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+}
+void indentifier()
+{
+	fprintf(token_fp, "<ID, %s> ", yytext);
+	printf("Line no %d: Token <ID> Lexeme %s found\n\n", line_count, yytext);
+}	
 %}
 
 
-AlphaNumeric [a-zA-Z0-9]
-Letter [a-zA-Z]
+AlphaNumeric [a-zA-Z0-9_]
+Letter [a-zA-Z_]
+Identifier {Letter}{AlphaNumeric}*
 
 
 %%
 [ \t]+ {}
 [\n] {line_count++;}
-(if) 			{fprintf(token_fp, "<IF> ");}
-(for) 			{fprintf(token_fp, "<FOR> ");}
-(do) 			{fprintf(token_fp, "<DO> ");}
-(int) 			{fprintf(token_fp, "<INT> ");}
-(float) 		{fprintf(token_fp, "<FLOAT> ");}
-(void) 		{fprintf(token_fp, "<VOID> ");}
-(switch) 		{fprintf(token_fp, "<SWITCH> ");}
-(default) 		{fprintf(token_fp, "<DEFAULT> ");}
-(else)			{fprintf(token_fp, "<ELSE> ");}
-(while) 		{fprintf(token_fp, "<WHILE> ");}
-(break) 		{fprintf(token_fp, "<BREAK> ");}
-(char) 		{fprintf(token_fp, "<CHAR> ");}
-(double) 		{fprintf(token_fp, "<DOUBLE> ");}
-(return) 		{fprintf(token_fp, "<RETURN> ");}
-(case) 		{fprintf(token_fp, "<CASE> ");}
-(continue) 		{fprintf(token_fp, "<CONTINUE> ");}
-(\+\+)			{fprintf(token_fp, "<INCOP, %s> ", yytext);}
-(\-\-)			{fprintf(token_fp, "<INCOP, %s> ", yytext);}
-(\|\|)			{fprintf(token_fp, "<LOGICOP, %s> ", yytext);}
-(&&)			{fprintf(token_fp, "<LOGICOP, %s> ", yytext);}
-(\<=)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(\>=)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(==)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(!=)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(\<)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(\>)			{fprintf(token_fp, "<RELOP, %s> ", yytext);}
-(\+)			{fprintf(token_fp, "<ADDOP, %s> ", yytext);}
-(\-)			{fprintf(token_fp, "<ADDOP, %s> ", yytext);}
-(\*)			{fprintf(token_fp, "<MULOP, %s> ", yytext);}
-(\/)			{fprintf(token_fp, "<MULOP, %s> ", yytext);}
-(%)			{fprintf(token_fp, "<MULOP, %s> ", yytext);}
-(=)			{fprintf(token_fp, "<ASSIGNOP, %s> ", yytext);}
-(!)			{fprintf(token_fp, "<NOT, %s> ", yytext);}
-(\()			{fprintf(token_fp, "<LPAREN, %s> ", yytext);}
-(\))			{fprintf(token_fp, "<RPAREN, %s> ", yytext);}
-(\{)			{fprintf(token_fp, "<LCURL, %s> ", yytext); symbolTable.EnterScope();}
-(\})			{fprintf(token_fp, "<RCURL, %s> ", yytext); symbolTable.ExitScope();}
-(\[)			{fprintf(token_fp, "<LTHIRD, %s> ", yytext);}
-(\])			{fprintf(token_fp, "<RTHIRD, %s> ", yytext);}
-(,)			{fprintf(token_fp, "<COMMA, %s> ", yytext);}
-(;)			{fprintf(token_fp, "<SEMICOLON, %s> ", yytext);}
-
-{Letter}{AlphaNumeric}+ 	{printf("%s matched as Identifier rule\n",yytext);}
+(if) 		{printkeywords("IF");}
+(for) 		{printkeywords("FOR");}
+(do) 		{printkeywords("DO");}
+(int) 		{printkeywords("INT");}
+(float) 	{printkeywords("FLOAT");}
+(void) 		{printkeywords("VOID");}
+(switch) 	{printkeywords("SWITCH");}
+(default) 	{printkeywords("DEFAULT");}
+(else)		{printkeywords("ELSE");}
+(while) 	{printkeywords("WHILE");}
+(break) 	{printkeywords("BREAK");}
+(char) 		{printkeywords("CHAR");}
+(double) 	{printkeywords("DOUBLE");}
+(return) 	{printkeywords("RETURN");}
+(case) 		{printkeywords("CASE");}
+(continue) 	{printkeywords("CONTINUE");}
+(\+\+)			{printOperators("INCOP");}
+(\-\-)			{printOperators("INCOP");}
+(\|\|)			{printOperators("LOGICOP");}
+(&&)			{printOperators("LOGICOP");}
+(\<=)			{printOperators("RELOP");}
+(\>=)			{printOperators("RELOP");}
+(==)			{printOperators("RELOP");}
+(!=)			{printOperators("RELOP");}
+(\<)			{printOperators("RELOP");}
+(\>)			{printOperators("RELOP");}
+(\+)			{printOperators("ADDOP");}
+(\-)			{printOperators("ADDOP");}
+(\*)			{printOperators("MULOP");}
+(\/)			{printOperators("MULOP");}
+(%)			{printOperators("MULOP");}
+(=)			{printOperators("ASSIGNOP");}
+(!)			{printOperators("NOT");}
+(\()			{printOperators("LPAREN");}
+(\))			{printOperators("RPAREN");}
+(\{)			{printOperators("LCURL"); symbolTable.EnterScope();}
+(\})			{printOperators("RCURL"); symbolTable.ExitScope();}
+(\[)			{printOperators("LTHIRD");}
+(\])			{printOperators("RTHIRD");}
+(,)			{printOperators("COMMA");}
+(;)			{printOperators("SEMICOLON");}
+{Identifier}		{indentifier();}
 . 			{printf("Mysterious character %s found\n",yytext);}
 %%
 int main(int argc,char *argv[]){
@@ -76,12 +92,13 @@ int main(int argc,char *argv[]){
 		printf("Cannot open specified file\n");
 		return 0;
 	}
-	
+	freopen("log.txt","w",stdout);
 
+	
 	yyin= fin;
 	yylex();
 	fclose(yyin);
-	fclose(log_fp);
+	fclose(stdout);
 	fclose(token_fp);
 	return 0;
 }
