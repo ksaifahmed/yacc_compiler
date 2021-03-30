@@ -1,10 +1,12 @@
+'a'
 int main()
 {	
-	int i = b;
+	int i = 3.145; .34; .34E10; 35E10; 35;
 	b++;
 	if(b>=b || b == b || b = b)
 	{
 		b = b[b]
-		b = b / b * b % b;
+		
+		b = b / b * b % b; '\'
 	}
 }
