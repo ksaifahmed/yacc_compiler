@@ -1,5 +1,6 @@
 %option noyywrap yylineno
 %x MULCOMM
+%x SINCOMM
 
 %{
 #include<stdio.h>
@@ -71,7 +72,7 @@ Chars '{notbslash}'
 SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
 UndefSP (\\.)
 notsinqt [^']
-notws [^ ^\t^\n^']
+notws [^ ^\t^\n^'^\r]
 UntermChar ('){notws}*
 MultiChar '{notsinqt}{notsinqt}+'
 MultiLineComment /\*.*\*/
@@ -79,6 +80,30 @@ MultiLineComment /\*.*\*/
 %%
 [ \t]+ {}
 [\n] {line_count++;}
+(\r\n) {line_count++;}
+
+
+"//"			{ BEGIN SINCOMM; }
+<SINCOMM>[^\\^\r^\n]	{}
+<SINCOMM>(\r\n)|\n		{ BEGIN INITIAL; }
+<SINCOMM>(\\\n)|(\\\r\n)		{}
+<SINCOMM>\\[^\r^\n]	{ BEGIN INITIAL; }
+<SINCOMM><<EOF>>	{ BEGIN INITIAL; }
+
+
+"/*"			{ st_ln = line_count; BEGIN MULCOMM; }
+<MULCOMM>(\r\n)|\n	{ line_count++; }
+<MULCOMM>"*/"		{ BEGIN INITIAL; }
+<MULCOMM><<EOF>>	{
+				cout << "Error at line no "<< st_ln << ": ";
+				cout << "Unterminated comment" << endl << endl;
+				error_count++;
+				BEGIN INITIAL;
+			}
+<MULCOMM>.		{}
+
+
+
 (if) 		{printkeywords("IF");}
 (for) 		{printkeywords("FOR");}
 (do) 		{printkeywords("DO");}
@@ -147,17 +172,6 @@ MultiLineComment /\*.*\*/
 
 
 
-
-"/*"			{ st_ln = line_count; BEGIN MULCOMM; }
-<MULCOMM>\n		{ line_count++; }
-<MULCOMM>"*/"		{ BEGIN INITIAL; }
-<MULCOMM><<EOF>>	{
-				cout << "Error at line no "<< st_ln << ": ";
-				cout << "Unterminated comment" << endl << endl;
-				error_count++;
-				BEGIN INITIAL;
-			}
-<MULCOMM>.		{}
 
 
 
