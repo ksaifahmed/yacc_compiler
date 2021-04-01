@@ -1,6 +1,7 @@
 %option noyywrap yylineno
 %x MULCOMM
 %x SINCOMM
+%x STRINGSTATE
 
 %{
 #include<stdio.h>
@@ -12,6 +13,8 @@ int line_count = 1;
 int st_ln = 0;
 int error_count = 0;
 char* temp;
+string temp_str = "\"";
+string string_token = "";
 FILE *token_fp = fopen("token.txt","w");
 SymbolTable symbolTable(10);
 
@@ -34,13 +37,30 @@ void valueFound(const char* str)
 }
 void foundChar()
 {
-	char c = yytext[1];
-	string str = "";
-	str += c;
-	fprintf(token_fp, "<CONST_CHAR, %c> ", c);
-	printf("Line no %d: Token <CONST_CHAR> Lexeme %c found\n\n", line_count, c);
+	char ct = yytext[1];
+	string str = "\'";
+	str += ct;
+	str += "\'";
+	const char* c = str.c_str();
+	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found--> <CHAR_CONST, %c> \n\n", line_count, c, ct);
+	fprintf(token_fp, "<CHAR_CONST, %c> ", ct);
 	if(symbolTable.Insert(str, "CONST_CHAR"))
 		symbolTable.PrintAllScopes();
+}
+char genSpChar(string str)
+{
+    if(!str.compare("\\n")) return '\n';
+    if(!str.compare("\\t")) return '\t';
+    if(!str.compare("\\a")) return '\a';
+    if(!str.compare("\\f")) return '\f';
+    if(!str.compare("\\b")) return '\b';
+    if(!str.compare("\\r")) return '\r';
+    if(!str.compare("\\0")) return '\0';
+    if(!str.compare("\\v")) return '\v';
+    if(!str.compare("\\\'")) return '\'';
+    if(!str.compare("\\\\")) return '\\';
+    if(!str.compare("\\\"")) return '\"';
+    return 's';
 }	
 void foundSpChar()
 {
@@ -49,11 +69,49 @@ void foundSpChar()
 	str += ct;
 	ct = yytext[2];
 	str += ct;
-	const char *c = str.c_str();
-	fprintf(token_fp, "<CONST_CHAR, %s> ", c);
-	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found\n\n", line_count, c);
-	if(symbolTable.Insert(str, "CONST_CHAR"))
+	string str_stable = "\'" + str + "\'";
+	const char *c = str_stable.c_str();
+	char ctkn = genSpChar(str);
+	fprintf(token_fp, "<CHAR_CONST, %c> ", ctkn);
+	printf("Line no %d: Token <CONST_CHAR> Lexeme %s ", line_count, c);
+	printf("found--> <CHAR_CONST, %c> \n\n", ctkn);
+	if(symbolTable.Insert(str_stable, "CHAR_CONST"))
 		symbolTable.PrintAllScopes();
+}
+void appendString()
+{
+	char c = yytext[0];
+	temp_str += c;
+	string_token += c;
+}
+void foundString()
+{
+	temp_str += "\"";
+	const char* c = temp_str.c_str();
+	const char* ct = string_token.c_str();
+	fprintf(token_fp, "<STRING, \"%s\"> ", ct);
+	printf("Line no %d: Token <STRING> Lexeme %s ", line_count, c);
+	printf("found--> <STRING, \"%s\"> \n\n", ct);
+	if(symbolTable.Insert(temp_str, "STRING"))
+		symbolTable.PrintAllScopes();
+	temp_str = "\"";
+}
+void str_term_error()
+{
+	cout << "Error at line no " << line_count <<": ";
+	cout << "Unterminated string" << endl << endl;
+	error_count++;
+}
+void handleSpString()
+{
+	char c = yytext[0];
+	string str = "";
+	str += c;
+	c = yytext[1];
+	str += c;
+	c = genSpChar(str);
+	temp_str += str;
+	string_token += c;
 }
 %}
 
@@ -69,7 +127,7 @@ PointFloat \.{Number}(E[+-]?{Number})?
 Float {DecimalPlaceFloat}|{NumPowerFloat}|{PointFloat}
 notbslash [^\\]
 Chars '{notbslash}'
-SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
+SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\\")|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
 UndefSP (\\.)
 notsinqt [^']
 notws [^ ^\t^\n^'^\r]
@@ -83,12 +141,12 @@ MultiLineComment /\*.*\*/
 (\r\n) {line_count++;}
 
 
-"//"			{ BEGIN SINCOMM; }
-<SINCOMM>[^\\^\r^\n]	{}
-<SINCOMM>(\r\n)|\n		{ BEGIN INITIAL; }
-<SINCOMM>(\\\n)|(\\\r\n)		{}
-<SINCOMM>\\[^\r^\n]	{ BEGIN INITIAL; }
-<SINCOMM><<EOF>>	{ BEGIN INITIAL; }
+"//"				{ BEGIN SINCOMM; }
+<SINCOMM>[^\\^\r^\n]		{}
+<SINCOMM>(\r\n)|\n		{ line_count++; BEGIN INITIAL; }
+<SINCOMM>(\\\n)|(\\\r\n)	{ line_count++; }
+<SINCOMM>\\[^\r^\n]		{ BEGIN INITIAL; }
+<SINCOMM><<EOF>>		{ BEGIN INITIAL; }
 
 
 "/*"			{ st_ln = line_count; BEGIN MULCOMM; }
@@ -154,8 +212,6 @@ MultiLineComment /\*.*\*/
 
 
 
-
-
 {Chars}			{foundChar();}
 ('{SpChars}')			{foundSpChar();}
 {UntermChar}			{
@@ -170,6 +226,21 @@ MultiLineComment /\*.*\*/
 				}
 				
 
+
+
+\"				{ BEGIN STRINGSTATE; }
+<STRINGSTATE>\"		{ foundString(); BEGIN INITIAL; }
+<STRINGSTATE>{SpChars}		{ handleSpString() ;}
+<STRINGSTATE>\\\n		{ line_count++; }
+<STRINGSTATE>\\[^\n]		{ 
+					str_term_error();
+					BEGIN INITIAL;
+				}
+<STRINGSTATE>\n		{	
+					str_term_error(); line_count++; BEGIN INITIAL;
+				}	
+<STRINGSTATE>[^\n^\\]		{ appendString(); }
+<STRINGSTATE><<EOF>>		{ str_term_error(); 	BEGIN INITIAL; }
 
 
 

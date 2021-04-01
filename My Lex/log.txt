@@ -1,6 +1,6 @@
-Line no 1: Token <CONST_CHAR> Lexeme a found
+Line no 1: Token <CONST_CHAR> Lexeme 'a' found--> <CHAR_CONST, a> 
 
-Inserted in ScopeTable# 1 at position 7, 0
+Inserted in ScopeTable# 1 at position 5, 0
 
 
 ScopeTable # 1
@@ -9,9 +9,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -28,9 +28,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -68,9 +68,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -100,9 +100,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -132,9 +132,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -164,9 +164,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -196,9 +196,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -228,9 +228,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -260,9 +260,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -351,9 +351,9 @@ ScopeTable # 1
 2 -->  
 3 -->  
 4 -->  
-5 -->  
+5 -->  < 'a' : CONST_CHAR>  
 6 -->  
-7 -->  < a : CONST_CHAR>  
+7 -->  
 8 -->  
 9 -->  
 
@@ -409,7 +409,149 @@ Line no 13: Token <RCURL> Lexeme } found
 
 ScopeTable with id 1.1 removed
 
-Error at line no 14: Multi character constant error: '/d'
+Line no 15: Token <INCOP> Lexeme ++ found
 
-Error at line no 14: Unterminated comment
+Line no 15: Token <ADDOP> Lexeme + found
+
+Line no 15: Token <CONST_CHAR> Lexeme '\n' found--> <CHAR_CONST, 
+> 
+
+Inserted in ScopeTable# 1 at position 0, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\t' found--> <CHAR_CONST, 	> 
+
+Inserted in ScopeTable# 1 at position 6, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  
+8 -->  
+9 -->  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\\' found--> <CHAR_CONST, \> 
+
+Inserted in ScopeTable# 1 at position 2, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  
+8 -->  
+9 -->  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\'' found--> <CHAR_CONST, '> 
+
+Inserted in ScopeTable# 1 at position 9, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  
+8 -->  
+9 -->  < '\'' : CHAR_CONST>  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\a' found--> <CHAR_CONST, > 
+
+Inserted in ScopeTable# 1 at position 7, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  < '\a' : CHAR_CONST>  
+8 -->  
+9 -->  < '\'' : CHAR_CONST>  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\b' found--> <CHAR_CONST, > 
+
+Inserted in ScopeTable# 1 at position 8, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  
+4 -->  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  < '\a' : CHAR_CONST>  
+8 -->  < '\b' : CHAR_CONST>  
+9 -->  < '\'' : CHAR_CONST>  
+
+Line no 15: Token <CONST_CHAR> Lexeme '\"' found--> <CHAR_CONST, "> 
+
+Inserted in ScopeTable# 1 at position 4, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  
+4 -->  < '\"' : CHAR_CONST>  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  < '\a' : CHAR_CONST>  
+8 -->  < '\b' : CHAR_CONST>  
+9 -->  < '\'' : CHAR_CONST>  
+
+Line no 16: Token <MULOP> Lexeme * found
+
+Line no 16: Token <MULOP> Lexeme / found
+
+Line no 19: Token <STRING> Lexeme "hello world\n\"adada" found--> <STRING, "hello world
+"adada"> 
+
+Inserted in ScopeTable# 1 at position 3, 0
+
+
+ScopeTable # 1
+0 -->  < '\n' : CHAR_CONST>  
+1 -->  < main : ID>  
+2 -->  < '\\' : CHAR_CONST>  
+3 -->  < "hello world\n\"adada" : STRING>  
+4 -->  < '\"' : CHAR_CONST>  
+5 -->  < 'a' : CONST_CHAR>  
+6 -->  < '\t' : CHAR_CONST>  
+7 -->  < '\a' : CHAR_CONST>  
+8 -->  < '\b' : CHAR_CONST>  
+9 -->  < '\'' : CHAR_CONST>  
 

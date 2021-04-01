@@ -10,7 +10,12 @@ int main()
 		b = b / b * b % b; 
 
 	} 
-}	//saif \
+} 	//saif \
 	'/d' /*
-+++'\n''\t''\\''\'''\a''\b'
++++'\n''\t''\\''\'''\a''\b''\"'
 */
+
+"hello world\n\"\
+adada"
+
+
