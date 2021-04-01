@@ -95,6 +95,7 @@ void foundString()
 	if(symbolTable.Insert(temp_str, "STRING"))
 		symbolTable.PrintAllScopes();
 	temp_str = "\"";
+	string_token = "\"";
 }
 void str_term_error()
 {
