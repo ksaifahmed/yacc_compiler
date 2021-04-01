@@ -1,16 +1,15 @@
 %option noyywrap yylineno
 %x CHARSTATE
-%x CHARTERMINATION
 
 %{
 #include<stdio.h>
-#include<stdlib.h>
+#include<stdlib.h>		
 #include "symboltable.h"
 #include<string>
 
 int line_count = 1;
 int error_count = 0;
-char * temp_char;
+char* temp;
 FILE *token_fp = fopen("token.txt","w");
 SymbolTable symbolTable(10);
 
@@ -33,15 +32,30 @@ void valueFound(const char* str)
 }
 void foundChar()
 {
-	string str = *temp_char + "";
-	fprintf(token_fp, "<CONST_CHAR, %s> ", temp_char);
-	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found\n\n", line_count, temp_char);
+	char c = yytext[1];
+	string str = "";
+	str += c;
+	fprintf(token_fp, "<CONST_CHAR, %c> ", c);
+	printf("Line no %d: Token <CONST_CHAR> Lexeme %c found\n\n", line_count, c);
 	if(symbolTable.Insert(str, "CONST_CHAR"))
 		symbolTable.PrintAllScopes();
 }	
+void foundSpChar()
+{
+	char ct = yytext[1];
+	string str = "";
+	str += ct;
+	ct = yytext[2];
+	str += ct;
+	const char *c = str.c_str();
+	fprintf(token_fp, "<CONST_CHAR, %s> ", c);
+	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found\n\n", line_count, c);
+	if(symbolTable.Insert(str, "CONST_CHAR"))
+		symbolTable.PrintAllScopes();
+}
 %}
 
-
+WhiteSpace [ \t\n]
 AlphaNumeric [a-zA-Z0-9_]
 Letter [a-zA-Z_]
 Identifier {Letter}{AlphaNumeric}*
@@ -51,8 +65,14 @@ DecimalPlaceFloat {Number}(\.{Number})(E[+-]?{Number})?
 NumPowerFloat {Number}(E[+-]?{Number})
 PointFloat \.{Number}(E[+-]?{Number})?
 Float {DecimalPlaceFloat}|{NumPowerFloat}|{PointFloat}
+notbslash [^\\]
+Chars '{notbslash}'
 SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
-
+UndefSP (\\.)
+notsinqt [^']
+notws [^ ^\t^\n^']
+UntermChar ('){notws}*
+MultiChar '{notsinqt}{notsinqt}+'
 
 %%
 [ \t]+ {}
@@ -103,20 +123,18 @@ SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
 {Float}			{valueFound("CONST_FLOAT");}
 {Number}		{valueFound("CONST_INT");}
 {Identifier}		{valueFound("ID");}
-
-
-
-<CHARTERMINATION>'	{foundChar(); BEGIN INITIAL;}
-<CHARSTATE>{SpChars}	{*temp_char = yytext[1]; BEGIN CHARTERMINATION;}
-'			{BEGIN CHARSTATE;}
-<CHARSTATE>.		{*temp_char = yytext[0]; BEGIN CHARTERMINATION; }
-<CHARTERMINATION>.	{
-				printf("Error at line no %d: Unterminated character \'%s\n", line_count, temp_char);
-				error_count++; BEGIN INITIAL; 
-			}
-
-
-
+{Chars}			{foundChar();}
+('{SpChars}')			{foundSpChar();}
+{UntermChar}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Unterminated character " << yytext << endl;
+					error_count++;
+				}
+{MultiChar}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Multi character constant error: " << yytext << endl;
+					error_count++;
+				}
 
 . 			{printf("Mysterious character %s found\n",yytext);}
 %%

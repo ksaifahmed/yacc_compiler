@@ -1,0 +1,517 @@
+Line no 1: Token <CONST_CHAR> Lexeme a found
+
+Inserted in ScopeTable# 1 at position 7, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 2: Token <INT> Lexeme int found
+
+Line no 2: Token <ID> Lexeme main found
+
+Inserted in ScopeTable# 1 at position 1, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 2: Token <LPAREN> Lexeme ( found
+
+Line no 2: Token <RPAREN> Lexeme ) found
+
+Line no 3: Token <LCURL> Lexeme { found
+
+New ScopeTable with id 1.1 created
+
+Line no 4: Token <INT> Lexeme int found
+
+Line no 4: Token <ID> Lexeme i found
+
+Inserted in ScopeTable# 1.1 at position 5, 0
+
+
+ScopeTable # 1.1
+0 -->  
+1 -->  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < i : ID>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <ASSIGNOP> Lexeme = found
+
+Line no 4: Token <CONST_FLOAT> Lexeme 3.145 found
+
+Inserted in ScopeTable# 1.1 at position 1, 0
+
+
+ScopeTable # 1.1
+0 -->  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < i : ID>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <SEMICOLON> Lexeme ; found
+
+Line no 4: Token <CONST_FLOAT> Lexeme .34 found
+
+Inserted in ScopeTable# 1.1 at position 9, 0
+
+
+ScopeTable # 1.1
+0 -->  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < i : ID>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <SEMICOLON> Lexeme ; found
+
+Line no 4: Token <CONST_FLOAT> Lexeme .34E10 found
+
+Inserted in ScopeTable# 1.1 at position 5, 1
+
+
+ScopeTable # 1.1
+0 -->  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < i : ID>  < .34E10 : CONST_FLOAT>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <SEMICOLON> Lexeme ; found
+
+Line no 4: Token <CONST_FLOAT> Lexeme 35E10 found
+
+Inserted in ScopeTable# 1.1 at position 0, 0
+
+
+ScopeTable # 1.1
+0 -->  < 35E10 : CONST_FLOAT>  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  < i : ID>  < .34E10 : CONST_FLOAT>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <SEMICOLON> Lexeme ; found
+
+Line no 4: Token <CONST_INT> Lexeme 35 found
+
+Inserted in ScopeTable# 1.1 at position 4, 0
+
+
+ScopeTable # 1.1
+0 -->  < 35E10 : CONST_FLOAT>  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  < 35 : CONST_INT>  
+5 -->  < i : ID>  < .34E10 : CONST_FLOAT>  
+6 -->  
+7 -->  
+8 -->  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 4: Token <SEMICOLON> Lexeme ; found
+
+Line no 5: Token <ID> Lexeme b found
+
+Inserted in ScopeTable# 1.1 at position 8, 0
+
+
+ScopeTable # 1.1
+0 -->  < 35E10 : CONST_FLOAT>  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  < 35 : CONST_INT>  
+5 -->  < i : ID>  < .34E10 : CONST_FLOAT>  
+6 -->  
+7 -->  
+8 -->  < b : ID>  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 5: Token <INCOP> Lexeme ++ found
+
+Line no 5: Token <SEMICOLON> Lexeme ; found
+
+Line no 6: Token <IF> Lexeme if found
+
+Line no 6: Token <LPAREN> Lexeme ( found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <RELOP> Lexeme >= found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <LOGICOP> Lexeme || found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <RELOP> Lexeme == found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <LOGICOP> Lexeme || found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <ASSIGNOP> Lexeme = found
+
+Line no 6: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 6: Token <RPAREN> Lexeme ) found
+
+Line no 7: Token <LCURL> Lexeme { found
+
+New ScopeTable with id 1.1.1 created
+
+Line no 8: Token <ID> Lexeme b found
+
+Inserted in ScopeTable# 1.1.1 at position 8, 0
+
+
+ScopeTable # 1.1.1
+0 -->  
+1 -->  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  
+8 -->  < b : ID>  
+9 -->  
+
+
+ScopeTable # 1.1
+0 -->  < 35E10 : CONST_FLOAT>  
+1 -->  < 3.145 : CONST_FLOAT>  
+2 -->  
+3 -->  
+4 -->  < 35 : CONST_INT>  
+5 -->  < i : ID>  < .34E10 : CONST_FLOAT>  
+6 -->  
+7 -->  
+8 -->  < b : ID>  
+9 -->  < .34 : CONST_FLOAT>  
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 8: Token <ASSIGNOP> Lexeme = found
+
+Line no 8: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 8: Token <LTHIRD> Lexeme [ found
+
+Line no 8: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 8: Token <RTHIRD> Lexeme ] found
+
+Line no 10: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 10: Token <ASSIGNOP> Lexeme = found
+
+Line no 10: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 10: Token <MULOP> Lexeme / found
+
+Line no 10: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 10: Token <MULOP> Lexeme * found
+
+Line no 10: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 10: Token <MULOP> Lexeme % found
+
+Line no 10: Token <ID> Lexeme b found
+
+<b,ID> already exists in current ScopeTable
+
+Line no 10: Token <SEMICOLON> Lexeme ; found
+
+Line no 12: Token <RCURL> Lexeme } found
+
+ScopeTable with id 1.1.1 removed
+
+Line no 13: Token <RCURL> Lexeme } found
+
+ScopeTable with id 1.1 removed
+
+Line no 13: Token <INCOP> Lexeme ++ found
+
+Line no 13: Token <ADDOP> Lexeme + found
+
+Line no 13: Token <CONST_CHAR> Lexeme \n found
+
+Inserted in ScopeTable# 1 at position 2, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  
+9 -->  
+
+Line no 13: Token <CONST_CHAR> Lexeme \t found
+
+Inserted in ScopeTable# 1 at position 8, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  < \t : CONST_CHAR>  
+9 -->  
+
+Line no 13: Token <CONST_CHAR> Lexeme \\ found
+
+Inserted in ScopeTable# 1 at position 4, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  < \\ : CONST_CHAR>  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  < \t : CONST_CHAR>  
+9 -->  
+
+Line no 13: Token <CONST_CHAR> Lexeme \' found
+
+Inserted in ScopeTable# 1 at position 1, 1
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  < \' : CONST_CHAR>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  < \\ : CONST_CHAR>  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  < \t : CONST_CHAR>  
+9 -->  
+
+Line no 13: Token <CONST_CHAR> Lexeme \a found
+
+Inserted in ScopeTable# 1 at position 9, 0
+
+
+ScopeTable # 1
+0 -->  
+1 -->  < main : ID>  < \' : CONST_CHAR>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  < \\ : CONST_CHAR>  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  < \t : CONST_CHAR>  
+9 -->  < \a : CONST_CHAR>  
+
+Line no 13: Token <CONST_CHAR> Lexeme \b found
+
+Inserted in ScopeTable# 1 at position 0, 0
+
+
+ScopeTable # 1
+0 -->  < \b : CONST_CHAR>  
+1 -->  < main : ID>  < \' : CONST_CHAR>  
+2 -->  < \n : CONST_CHAR>  
+3 -->  
+4 -->  < \\ : CONST_CHAR>  
+5 -->  
+6 -->  
+7 -->  < a : CONST_CHAR>  
+8 -->  < \t : CONST_CHAR>  
+9 -->  < \a : CONST_CHAR>  
+
