@@ -1,5 +1,5 @@
 %option noyywrap yylineno
-%x CHARSTATE
+%x MULCOMM
 
 %{
 #include<stdio.h>
@@ -8,6 +8,7 @@
 #include<string>
 
 int line_count = 1;
+int st_ln = 0;
 int error_count = 0;
 char* temp;
 FILE *token_fp = fopen("token.txt","w");
@@ -73,6 +74,7 @@ notsinqt [^']
 notws [^ ^\t^\n^']
 UntermChar ('){notws}*
 MultiChar '{notsinqt}{notsinqt}+'
+MultiLineComment /\*.*\*/
 
 %%
 [ \t]+ {}
@@ -123,18 +125,43 @@ MultiChar '{notsinqt}{notsinqt}+'
 {Float}			{valueFound("CONST_FLOAT");}
 {Number}		{valueFound("CONST_INT");}
 {Identifier}		{valueFound("ID");}
+
+
+
+
+
+
 {Chars}			{foundChar();}
 ('{SpChars}')			{foundSpChar();}
 {UntermChar}			{
 					cout << "Error at line no "<< line_count << ": ";
-					cout << "Unterminated character " << yytext << endl;
+					cout << "Unterminated character " << yytext << endl << endl;
 					error_count++;
 				}
 {MultiChar}			{
 					cout << "Error at line no "<< line_count << ": ";
-					cout << "Multi character constant error: " << yytext << endl;
+					cout << "Multi character constant error: " << yytext << endl << endl;
 					error_count++;
 				}
+				
+
+
+
+
+"/*"			{ st_ln = line_count; BEGIN MULCOMM; }
+<MULCOMM>\n		{ line_count++; }
+<MULCOMM>"*/"		{ BEGIN INITIAL; }
+<MULCOMM><<EOF>>	{
+				cout << "Error at line no "<< st_ln << ": ";
+				cout << "Unterminated comment" << endl << endl;
+				error_count++;
+				BEGIN INITIAL;
+			}
+<MULCOMM>.		{}
+
+
+
+
 
 . 			{printf("Mysterious character %s found\n",yytext);}
 %%
