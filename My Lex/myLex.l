@@ -12,11 +12,10 @@
 int line_count = 1;
 int st_ln = 0;
 int error_count = 0;
-char* temp;
 string temp_str = "\"";
 string string_token = "";
 FILE *token_fp = fopen("token.txt","w");
-SymbolTable symbolTable(10);
+SymbolTable* symbolTable = new SymbolTable(7);
 
 void printkeywords(const char* str)
 {	
@@ -32,8 +31,8 @@ void valueFound(const char* str)
 {
 	fprintf(token_fp, "<%s, %s> ", str, yytext);
 	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
-	if(symbolTable.Insert(yytext, str)) 
-		symbolTable.PrintAllScopes();
+	if(symbolTable->Insert(yytext, str)) 
+		symbolTable->PrintAllScopes();
 }
 void foundChar()
 {
@@ -44,8 +43,8 @@ void foundChar()
 	const char* c = str.c_str();
 	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found--> <CHAR_CONST, %c> \n\n", line_count, c, ct);
 	fprintf(token_fp, "<CHAR_CONST, %c> ", ct);
-	if(symbolTable.Insert(str, "CONST_CHAR"))
-		symbolTable.PrintAllScopes();
+	if(symbolTable->Insert(str, "CONST_CHAR"))
+		symbolTable->PrintAllScopes();
 }
 char genSpChar(string str)
 {
@@ -75,8 +74,8 @@ void foundSpChar()
 	fprintf(token_fp, "<CHAR_CONST, %c> ", ctkn);
 	printf("Line no %d: Token <CONST_CHAR> Lexeme %s ", line_count, c);
 	printf("found--> <CHAR_CONST, %c> \n\n", ctkn);
-	if(symbolTable.Insert(str_stable, "CHAR_CONST"))
-		symbolTable.PrintAllScopes();
+	if(symbolTable->Insert(str_stable, "CHAR_CONST"))
+		symbolTable->PrintAllScopes();
 }
 void appendString()
 {
@@ -92,10 +91,10 @@ void foundString()
 	fprintf(token_fp, "<STRING, \"%s\"> ", ct);
 	printf("Line no %d: Token <STRING> Lexeme %s ", line_count, c);
 	printf("found--> <STRING, \"%s\"> \n\n", ct);
-	if(symbolTable.Insert(temp_str, "STRING"))
-		symbolTable.PrintAllScopes();
+	if(symbolTable->Insert(temp_str, "STRING"))
+		symbolTable->PrintAllScopes();
 	temp_str = "\"";
-	string_token = "\"";
+	string_token = "";
 }
 void str_term_error()
 {
@@ -126,7 +125,7 @@ DecimalPlaceFloat {Number}(\.{Number})(E[+-]?{Number})?
 NumPowerFloat {Number}(E[+-]?{Number})
 PointFloat \.{Number}(E[+-]?{Number})?
 Float {DecimalPlaceFloat}|{NumPowerFloat}|{PointFloat}
-notbslash [^\\]
+notbslash [^\\']
 Chars '{notbslash}'
 SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\\")|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
 UndefSP (\\.)
@@ -135,6 +134,14 @@ notws [^ ^\t^\n^'^\r]
 UntermChar ('){notws}*
 MultiChar '{notsinqt}{notsinqt}+'
 MultiLineComment /\*.*\*/
+TooManyDp ((\.[0-9]*)((\.[0-9]*)+)|(([0-9]*)\.)(([0-9]*)\.)(([0-9]*\.?)+))([E][+-]?[0-9]*)?
+Unrecog ([^a-zA-Z_0-9\n\t\\\'\a\f\r\b\v\0\"+\-*\/%<>=!&|(){}\[\],;])+
+EmptyChar ''
+InvalID {Number}+{Letter}+
+Ill1 ({Number}(E[+-]?{Number})(\.+{Number}*)+)
+Ill2 (\.{Number}(E[+-]?{Number})(\.+{Number}*)+)
+Ill3 ({Number}(\.{Number})(E[+-]?{Number})(\.+{Number}*)+)
+Illnum {Ill1}|{Ill2}|{Ill3}
 
 %%
 [ \t]+ {}
@@ -200,8 +207,8 @@ MultiLineComment /\*.*\*/
 (!)			{printOperators("NOT");}
 (\()			{printOperators("LPAREN");}
 (\))			{printOperators("RPAREN");}
-(\{)			{printOperators("LCURL"); symbolTable.EnterScope();}
-(\})			{printOperators("RCURL"); symbolTable.ExitScope();}
+(\{)			{printOperators("LCURL"); symbolTable->EnterScope();}
+(\})			{printOperators("RCURL"); symbolTable->ExitScope();}
 (\[)			{printOperators("LTHIRD");}
 (\])			{printOperators("RTHIRD");}
 (,)			{printOperators("COMMA");}
@@ -232,23 +239,46 @@ MultiLineComment /\*.*\*/
 \"				{ BEGIN STRINGSTATE; }
 <STRINGSTATE>\"		{ foundString(); BEGIN INITIAL; }
 <STRINGSTATE>{SpChars}		{ handleSpString() ;}
-<STRINGSTATE>\\\n		{ line_count++; }
-<STRINGSTATE>\\[^\n]		{ 
+<STRINGSTATE>(\\\n)|(\\\r\\\n) { line_count++; }
+<STRINGSTATE>\\[^\r\n]		{ 
 					str_term_error();
 					BEGIN INITIAL;
 				}
-<STRINGSTATE>\n		{	
+<STRINGSTATE>(\n)|(\r\n)	{	
 					str_term_error(); line_count++; BEGIN INITIAL;
 				}	
-<STRINGSTATE>[^\n^\\]		{ appendString(); }
+<STRINGSTATE>[^\n\\]		{ appendString(); }
 <STRINGSTATE><<EOF>>		{ str_term_error(); 	BEGIN INITIAL; }
 
 
 
 
-
-
-
+{TooManyDp}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Too many decimal points " << yytext << endl << endl;
+					error_count++;
+				}
+{Unrecog}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Unrecognized character " << yytext << endl << endl;
+					error_count++;
+				}				
+{EmptyChar}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Empty character constant error " << yytext << endl << endl;
+					error_count++;
+				}
+{InvalID}			{
+					cout << "Error at line no "<< line_count << ": Invalid Suffix on numeric constant or invalid";
+					cout << " prefix on identifier for character sequence " << yytext << endl << endl;
+					error_count++;
+				}
+{Illnum}			{
+					cout << "Error at line no "<< line_count << ": ";
+					cout << "Ill formed number " << yytext << endl << endl;
+					error_count++;
+				}
+								
 . 			{printf("Mysterious character %s found\n",yytext);}
 %%
 int main(int argc,char *argv[]){
@@ -271,5 +301,6 @@ int main(int argc,char *argv[]){
 	fclose(yyin);
 	fclose(stdout);
 	fclose(token_fp);
+	delete symbolTable;
 	return 0;
 }
