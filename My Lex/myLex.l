@@ -12,25 +12,36 @@
 int line_count = 1;
 int st_ln = 0;
 int error_count = 0;
+int total_lines;
 string temp_str = "\"";
 string string_token = "";
+string comment = "";
 FILE *token_fp = fopen("token.txt","w");
 SymbolTable* symbolTable = new SymbolTable(7);
+
+string lexString()
+{
+    string s = "";
+    for (int i = 0; i < yyleng; i++) {
+        s += yytext[i];
+    }
+    return s;
+}
 
 void printkeywords(const char* str)
 {	
 	fprintf(token_fp,"<%s> ", str);
-	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+	printf("\nLine no %d: Token <%s> Lexeme %s found\n", line_count, str, yytext);
 }
 void printOperators(const char* str)
 {
 	fprintf(token_fp, "<%s, %s> ", str, yytext);
-	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+	printf("\nLine no %d: Token <%s> Lexeme %s found\n", line_count, str, yytext);
 }
 void valueFound(const char* str)
 {
 	fprintf(token_fp, "<%s, %s> ", str, yytext);
-	printf("Line no %d: Token <%s> Lexeme %s found\n\n", line_count, str, yytext);
+	printf("\nLine no %d: Token <%s> Lexeme %s found\n", line_count, str, yytext);
 	if(symbolTable->Insert(yytext, str)) 
 		symbolTable->PrintAllScopes();
 }
@@ -41,7 +52,7 @@ void foundChar()
 	str += ct;
 	str += "\'";
 	const char* c = str.c_str();
-	printf("Line no %d: Token <CONST_CHAR> Lexeme %s found--> <CHAR_CONST, %c> \n\n", line_count, c, ct);
+	printf("\nLine no %d: Token <CONST_CHAR> Lexeme %s found --> <CHAR_CONST, %c> \n", line_count, c, ct);
 	fprintf(token_fp, "<CHAR_CONST, %c> ", ct);
 	if(symbolTable->Insert(str, "CONST_CHAR"))
 		symbolTable->PrintAllScopes();
@@ -72,9 +83,9 @@ void foundSpChar()
 	const char *c = str_stable.c_str();
 	char ctkn = genSpChar(str);
 	fprintf(token_fp, "<CHAR_CONST, %c> ", ctkn);
-	printf("Line no %d: Token <CONST_CHAR> Lexeme %s ", line_count, c);
-	printf("found--> <CHAR_CONST, %c> \n\n", ctkn);
-	if(symbolTable->Insert(str_stable, "CHAR_CONST"))
+	printf("\nLine no %d: Token <CONST_CHAR> Lexeme %s ", line_count, c);
+	printf("found --> <CHAR_CONST, %c> \n", ctkn);
+	if(symbolTable->Insert(str_stable, "CONST_CHAR"))
 		symbolTable->PrintAllScopes();
 }
 void appendString()
@@ -89,18 +100,18 @@ void foundString()
 	const char* c = temp_str.c_str();
 	const char* ct = string_token.c_str();
 	fprintf(token_fp, "<STRING, \"%s\"> ", ct);
-	printf("Line no %d: Token <STRING> Lexeme %s ", line_count, c);
-	printf("found--> <STRING, \"%s\"> \n\n", ct);
-	if(symbolTable->Insert(temp_str, "STRING"))
-		symbolTable->PrintAllScopes();
+	printf("\nLine no %d: Token <STRING> Lexeme %s ", st_ln, c);
+	printf("found --> <STRING, \"%s\"> \n", ct);
 	temp_str = "\"";
 	string_token = "";
 }
 void str_term_error()
 {
-	cout << "Error at line no " << line_count <<": ";
-	cout << "Unterminated string" << endl << endl;
+	cout << "Error at line no " << st_ln <<": ";
+	cout << "Unterminated String " << temp_str << endl << endl;
 	error_count++;
+	temp_str = "\"";
+	string_token = "";
 }
 void handleSpString()
 {
@@ -112,6 +123,12 @@ void handleSpString()
 	c = genSpChar(str);
 	temp_str += str;
 	string_token += c;
+}
+void commentFound()
+{
+	const char * c = comment.c_str();
+	printf("\nLine no %d: Token <COMMENT> Lexeme %s found\n", st_ln, c);
+	comment = "";
 }
 %}
 
@@ -129,9 +146,9 @@ notbslash [^\\']
 Chars '{notbslash}'
 SpChars (\\n)|(\\t)|(\\\\)|(\\')|(\\\")|(\\a)|(\\f)|(\\r)|(\\b)|(\\v)|(\\0)
 UndefSP (\\.)
-notsinqt [^']
+notsinqt [^'\r\n]
 notws [^ ^\t^\n^'^\r]
-UntermChar ('){notws}*
+UntermChar ('{notws}*)|('\\')
 MultiChar '{notsinqt}{notsinqt}+'
 MultiLineComment /\*.*\*/
 TooManyDp ((\.[0-9]*)((\.[0-9]*)+)|(([0-9]*)\.)(([0-9]*)\.)(([0-9]*\.?)+))([E][+-]?[0-9]*)?
@@ -145,28 +162,28 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 
 %%
 [ \t]+ {}
-[\n] {line_count++;}
-(\r\n) {line_count++;}
+(\n)|(\r\n) {line_count++;}
 
 
-"//"				{ BEGIN SINCOMM; }
-<SINCOMM>[^\\^\r^\n]		{}
-<SINCOMM>(\r\n)|\n		{ line_count++; BEGIN INITIAL; }
-<SINCOMM>(\\\n)|(\\\r\n)	{ line_count++; }
-<SINCOMM>\\[^\r^\n]		{ BEGIN INITIAL; }
-<SINCOMM><<EOF>>		{ BEGIN INITIAL; }
+"//"				{ st_ln = line_count; comment += lexString(); BEGIN SINCOMM; }
+<SINCOMM>[^\\^\r^\n]		{ comment += lexString(); }
+<SINCOMM>(\r\n)|\n		{ line_count++; commentFound(); BEGIN INITIAL; }
+<SINCOMM>(\\\r\n)|(\\\n)	{ line_count++; comment += lexString(); }
+<SINCOMM>\\[^\r^\n]		{ comment += lexString();  }
+<SINCOMM><<EOF>>		{ commentFound(); BEGIN INITIAL; }
 
 
-"/*"			{ st_ln = line_count; BEGIN MULCOMM; }
-<MULCOMM>(\r\n)|\n	{ line_count++; }
-<MULCOMM>"*/"		{ BEGIN INITIAL; }
+"/*"			{ st_ln = line_count; comment += lexString(); BEGIN MULCOMM; }
+<MULCOMM>(\r\n)|\n	{ comment += lexString(); line_count++; }
+<MULCOMM>"*/"		{ comment += lexString(); commentFound(); BEGIN INITIAL; }
 <MULCOMM><<EOF>>	{
 				cout << "Error at line no "<< st_ln << ": ";
-				cout << "Unterminated comment" << endl << endl;
+				cout << "Unterminated Comment " << comment << endl << endl;
 				error_count++;
+				comment = "";
 				BEGIN INITIAL;
 			}
-<MULCOMM>.		{}
+<MULCOMM>.		{ comment += lexString(); }
 
 
 
@@ -229,25 +246,25 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 				}
 {MultiChar}			{
 					cout << "Error at line no "<< line_count << ": ";
-					cout << "Multi character constant error: " << yytext << endl << endl;
+					cout << "Multi character constant error " << yytext << endl << endl;
 					error_count++;
 				}
 				
 
 
 
-\"				{ BEGIN STRINGSTATE; }
+\"				{ st_ln = line_count; BEGIN STRINGSTATE; }
 <STRINGSTATE>\"		{ foundString(); BEGIN INITIAL; }
 <STRINGSTATE>{SpChars}		{ handleSpString() ;}
-<STRINGSTATE>(\\\n)|(\\\r\\\n) { line_count++; }
+<STRINGSTATE>(\\\r\n)|(\\\n) 	{ line_count++; temp_str += lexString(); }
 <STRINGSTATE>\\[^\r\n]		{ 
 					str_term_error();
 					BEGIN INITIAL;
 				}
-<STRINGSTATE>(\n)|(\r\n)	{	
+<STRINGSTATE>(\r\n)|(\n)	{	
 					str_term_error(); line_count++; BEGIN INITIAL;
 				}	
-<STRINGSTATE>[^\n\\]		{ appendString(); }
+<STRINGSTATE>[^\r\n\\]		{ appendString(); }
 <STRINGSTATE><<EOF>>		{ str_term_error(); 	BEGIN INITIAL; }
 
 
@@ -269,8 +286,8 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 					error_count++;
 				}
 {InvalID}			{
-					cout << "Error at line no "<< line_count << ": Invalid Suffix on numeric constant or invalid";
-					cout << " prefix on identifier for character sequence " << yytext << endl << endl;
+					cout << "Error at line no "<< line_count << ": Invalid prefix on ID";
+					cout << " or invalid suffix on Number " << yytext << endl << endl;
 					error_count++;
 				}
 {Illnum}			{
@@ -278,7 +295,7 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 					cout << "Ill formed number " << yytext << endl << endl;
 					error_count++;
 				}
-								
+											
 . 			{printf("Mysterious character %s found\n",yytext);}
 %%
 int main(int argc,char *argv[]){
@@ -298,6 +315,11 @@ int main(int argc,char *argv[]){
 	
 	yyin= fin;
 	yylex();
+	
+	symbolTable -> PrintAllScopes();
+	cout << "\nTotal lines: " << line_count << endl;
+	cout << "Total errors: " << error_count << endl;
+	
 	fclose(yyin);
 	fclose(stdout);
 	fclose(token_fp);

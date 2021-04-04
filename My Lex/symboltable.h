@@ -32,17 +32,7 @@ SymbolInfo::SymbolInfo(string n, string k)
 
 SymbolInfo::~SymbolInfo()
 {
-    SymbolInfo * curr = next;
-    while(true)
-    {
-        if(curr == NULL)
-        {
-            break;
-        }
-        SymbolInfo * next = curr -> getNext();
-        delete curr;
-        curr = next;
-    }
+	delete next;
 }
 
 
@@ -99,12 +89,22 @@ ScopeTable::ScopeTable(int n)
 
 ScopeTable::~ScopeTable()
 {
-	for(int i = 0; i < bucket_size; i++)
+    for(int i = 0; i < bucket_size; i++)
     {
         if(scope_array[i] != NULL) delete scope_array[i];
+        scope_array[i] = NULL;
     }
-    delete[] scope_array;
-    delete parentScope;
+    if(scope_array != NULL) delete[] scope_array;
+    
+    ScopeTable * curr = parentScope;
+    ScopeTable * par;
+    while(true)
+    {
+    	if(curr == NULL) break;
+    	par = curr -> getParent();
+    	delete curr;
+    	curr = par;
+    }
 }
 
 
@@ -149,7 +149,7 @@ bool ScopeTable::Insert(string key, string type)
     SymbolInfo * curr = Lookup(key);
     if(curr != NULL)
     {
-        cout << "<" << curr -> getName() << "," << curr -> getType() << "> already exists in current ScopeTable" << endl << endl;
+        cout << curr -> getName() << " already exists in current ScopeTable" << endl << endl;
         return false;
     }
     int index = hash_fuc(key);
@@ -174,7 +174,7 @@ bool ScopeTable::Insert(string key, string type)
             curr = curr -> getNext();
         }
     }
-    cout << "Inserted in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl << endl;
+    //cout << "Inserted in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl << endl;
     return true;
 }
 
@@ -222,12 +222,13 @@ void ScopeTable::Print()
     cout << "\nScopeTable # " << id << endl;
     for(int i = 0; i < bucket_size; i++)
     {
-        cout << i << " -->  ";
         SymbolInfo * curr = scope_array[i];
+        if(curr == NULL) continue;
+        cout << " " << i << " --> ";
         while(true)
         {
             if(curr == NULL) break;
-            cout << "< " << curr -> getName() << " : " << curr -> getType() << ">  ";
+            cout << "< " << curr -> getName() << " : " << curr -> getType() << "> ";
             curr = curr -> getNext();
         }
         cout << endl;
@@ -282,17 +283,9 @@ SymbolTable::SymbolTable(int n)
 
 SymbolTable::~SymbolTable()
 {
-    ScopeTable * parent = NULL;
-    while(true)
-    {
-        if(currentScopeTable == NULL)
-        {
-            break;
-        }
-        parent = currentScopeTable -> getParent();
-        delete currentScopeTable;
-        currentScopeTable = parent;
-    }
+    if(currentScopeTable != NULL)
+    	delete currentScopeTable;
+    currentScopeTable = NULL;
 }
 
 
@@ -307,7 +300,7 @@ void SymbolTable::EnterScope()
     currentScopeTable = temp;
     relative_id = 1;
 
-    cout << "New ScopeTable with id " << id <<" created" << endl << endl;
+    //cout << "New ScopeTable with id " << id <<" created" << endl << endl;
 
 }
 
@@ -317,12 +310,12 @@ void SymbolTable::ExitScope()
     if(currentScopeTable -> getParent() != NULL)
     {
         string id = currentScopeTable -> getID();
-        cout << "ScopeTable with id " << id <<" removed" << endl << endl;
+        //cout << "ScopeTable with id " << id <<" removed" << endl << endl;
 
         id = id[id.length() - 1];
         relative_id = stoi(id) + 1;
-
-        currentScopeTable = currentScopeTable -> getParent();
+	
+	currentScopeTable = currentScopeTable -> getParent();
     }
 }
 
