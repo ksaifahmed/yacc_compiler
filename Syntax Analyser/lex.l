@@ -113,11 +113,6 @@ void commentFound()
 }
 
 //parser communicating functions
-void sendOperator()
-{
-	string * s = new string(yytext);
-	yylval.str = s;	
-}
 void sendValue(string token)
 {
 	SymbolInfo * si = new SymbolInfo(lexString(), token);
@@ -198,32 +193,36 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 (continue) 	{ return CONTINUE;}
 
 
-(\+\+)			{sendOperator(); return INCOP;}
-(\-\-)			{sendOperator(); return INCOP;}
-(\|\|)			{sendOperator(); return LOGICOP;}
-(&&)			{sendOperator(); return LOGICOP;}
-(\<=)			{sendOperator(); return RELOP;}
-(\>=)			{sendOperator(); return RELOP;}
-(==)			{sendOperator(); return RELOP;}
-(!=)			{sendOperator(); return RELOP;}
-(\<)			{sendOperator(); return RELOP;}
-(\>)			{sendOperator(); return RELOP;}
-(\+)			{sendOperator(); return ADDOP;}
-(\-)			{sendOperator(); return ADDOP;}
-(\*)			{sendOperator(); return MULOP;}
-(\/)			{sendOperator(); return MULOP;}
-(%)			{sendOperator(); return MULOP;}
+(\+\+)			{sendValue("INCOP"); return INCOP; }
+(\-\-)			{sendValue("INCOP"); return INCOP; }
 
-(=)			{sendOperator(); return ASSIGNOP;}
-(!)			{sendOperator(); return NOT;}
-(\()			{sendOperator(); return LPAREN;}
-(\))			{sendOperator(); return RPAREN;}
-(\{)			{sendOperator(); return LCURL;}
-(\})			{sendOperator(); return RCURL;}
-(\[)			{sendOperator(); return LTHIRD;}
-(\])			{sendOperator(); return RTHIRD;}
-(,)			{sendOperator(); return COMMA;}
-(;)			{sendOperator(); return SEMICOLON;}
+(\|\|)			{sendValue("LOGICOP"); return LOGICOP; }
+(&&)			{sendValue("LOGICOP"); return LOGICOP; }
+
+(\<=)			{sendValue("RELOP"); return RELOP; }
+(\>=)			{sendValue("RELOP"); return RELOP; }
+(==)			{sendValue("RELOP"); return RELOP; }
+(!=)			{sendValue("RELOP"); return RELOP; }
+(\<)			{sendValue("RELOP"); return RELOP; }
+(\>)			{sendValue("RELOP"); return RELOP; }
+
+(\+)			{sendValue("ADDOP"); return ADDOP; }
+(\-)			{sendValue("ADDOP"); return ADDOP; }
+
+(\*)			{sendValue("MULOP"); return MULOP; }
+(\/)			{sendValue("MULOP"); return MULOP; }
+(%)			{sendValue("MULOP"); return MULOP; }
+
+(=)			{return ASSIGNOP;}
+(!)			{return NOT;}
+(\()			{return LPAREN;}
+(\))			{return RPAREN;}
+(\{)			{return LCURL;}
+(\})			{return RCURL;}
+(\[)			{return LTHIRD;}
+(\])			{return RTHIRD;}
+(,)			{return COMMA;}
+(;)			{return SEMICOLON;}
 
 {Float}		{sendValue("CONST_FLOAT"); return CONST_FLOAT; }
 {Number}		{sendValue("CONST_INT"); return CONST_INT; }
