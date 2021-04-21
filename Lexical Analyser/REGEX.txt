@@ -1,0 +1,11 @@
+TOO MANY DP add E? variations at the end
+((\.[0-9]*)((\.[0-9]*)+)|(([0-9]*)\.)(([0-9]*)\.)(([0-9]*\.?)+))([E][+-]?[0-9]*)?
+
+ill formed:
+float + (.number*)+ 
+
+
+invalid suff:
+{Number}+[a-zA-Z_]+{Number}*
+
+
