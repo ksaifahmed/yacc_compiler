@@ -111,6 +111,18 @@ void commentFound()
 	const char * c = comment.c_str();
 	comment = "";
 }
+
+//parser communicating functions
+void sendOperator()
+{
+	string * s = new string(yytext);
+	yylval.str = s;	
+}
+void sendValue(string token)
+{
+	SymbolInfo * si = new SymbolInfo(lexString(), token);
+	yylval.si = si;
+}
 %}
 
 WhiteSpace [ \t\n]
@@ -119,9 +131,9 @@ Letter [a-zA-Z_]
 Identifier {Letter}{AlphaNumeric}*
 Digit [0-9]
 Number {Digit}+
-DecimalPlaceFloat {Number}(\.{Number})(E[+-]?{Number})?
-NumPowerFloat {Number}(E[+-]?{Number})
-PointFloat \.{Number}(E[+-]?{Number})?
+DecimalPlaceFloat {Number}(\.{Number})((e|E)[+-]?{Number})?
+NumPowerFloat {Number}((e|E)[+-]?{Number})
+PointFloat \.{Number}((e|E)[+-]?{Number})?
 Float {DecimalPlaceFloat}|{NumPowerFloat}|{PointFloat}
 notbslash [^\\']
 Chars '{notbslash}'
@@ -136,9 +148,9 @@ TooManyDp ((\.[0-9]*)((\.[0-9]*)+)|(([0-9]*)\.)(([0-9]*)\.)(([0-9]*\.?)+))([E][+
 Unrecog ([^a-zA-Z_0-9\n\t\\\'\a\f\r\b\v\0\"+\-*\/%<>=!&|(){}\[\],;])+
 EmptyChar ''
 InvalID {Number}+{Letter}+
-Ill1 ({Number}(E[+-]?{Number})(\.+{Number}*)+)
-Ill2 (\.{Number}(E[+-]?{Number})(\.+{Number}*)+)
-Ill3 ({Number}(\.{Number})(E[+-]?{Number})(\.+{Number}*)+)
+Ill1 ({Number}((e|E)[+-]?{Number})(\.+{Number}*)+)
+Ill2 (\.{Number}((e|E)[+-]?{Number})(\.+{Number}*)+)
+Ill3 ({Number}(\.{Number})((e|E)[+-]?{Number})(\.+{Number}*)+)
 Illnum {Ill1}|{Ill2}|{Ill3}
 
 %%
@@ -186,34 +198,36 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 (continue) 	{ return CONTINUE;}
 
 
-(\+\+)			{printOperators("INCOP");}
-(\-\-)			{printOperators("INCOP");}
-(\|\|)			{printOperators("LOGICOP");}
-(&&)			{printOperators("LOGICOP");}
-(\<=)			{printOperators("RELOP");}
-(\>=)			{printOperators("RELOP");}
-(==)			{printOperators("RELOP");}
-(!=)			{printOperators("RELOP");}
-(\<)			{printOperators("RELOP");}
-(\>)			{printOperators("RELOP");}
-(\+)			{printOperators("ADDOP");}
-(\-)			{printOperators("ADDOP");}
-(\*)			{printOperators("MULOP");}
-(\/)			{printOperators("MULOP");}
-(%)			{printOperators("MULOP");}
-(=)			{printOperators("ASSIGNOP");}
-(!)			{printOperators("NOT");}
-(\()			{printOperators("LPAREN");}
-(\))			{printOperators("RPAREN");}
-(\{)			{printOperators("LCURL");}
-(\})			{printOperators("RCURL");}
-(\[)			{printOperators("LTHIRD");}
-(\])			{printOperators("RTHIRD");}
-(,)			{printOperators("COMMA");}
-(;)			{printOperators("SEMICOLON");}
-{Float}			{valueFound("CONST_FLOAT");}
-{Number}		{valueFound("CONST_INT");}
-{Identifier}		{valueFound("ID");}
+(\+\+)			{sendOperator(); return INCOP;}
+(\-\-)			{sendOperator(); return INCOP;}
+(\|\|)			{sendOperator(); return LOGICOP;}
+(&&)			{sendOperator(); return LOGICOP;}
+(\<=)			{sendOperator(); return RELOP;}
+(\>=)			{sendOperator(); return RELOP;}
+(==)			{sendOperator(); return RELOP;}
+(!=)			{sendOperator(); return RELOP;}
+(\<)			{sendOperator(); return RELOP;}
+(\>)			{sendOperator(); return RELOP;}
+(\+)			{sendOperator(); return ADDOP;}
+(\-)			{sendOperator(); return ADDOP;}
+(\*)			{sendOperator(); return MULOP;}
+(\/)			{sendOperator(); return MULOP;}
+(%)			{sendOperator(); return MULOP;}
+
+(=)			{sendOperator(); return ASSIGNOP;}
+(!)			{sendOperator(); return NOT;}
+(\()			{sendOperator(); return LPAREN;}
+(\))			{sendOperator(); return RPAREN;}
+(\{)			{sendOperator(); return LCURL;}
+(\})			{sendOperator(); return RCURL;}
+(\[)			{sendOperator(); return LTHIRD;}
+(\])			{sendOperator(); return RTHIRD;}
+(,)			{sendOperator(); return COMMA;}
+(;)			{sendOperator(); return SEMICOLON;}
+
+{Float}		{sendValue("CONST_FLOAT"); return CONST_FLOAT; }
+{Number}		{sendValue("CONST_INT"); return CONST_INT; }
+{Identifier}		{sendValue("ID"); return ID; }
 
 
 
