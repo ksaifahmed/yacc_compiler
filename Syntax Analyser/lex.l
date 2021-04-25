@@ -16,12 +16,11 @@ using namespace std;
 using namespace std;
 
 extern YYSTYPE yylval;
-extern SymbolTable *table;
 void yyerror(char *);
-
 int line_count = 1;
-int st_ln = 0;
 int error_count = 0;
+
+int st_ln = 0;
 int total_lines;
 string temp_str = "\"";
 string string_token = "";
@@ -191,10 +190,11 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 (return) 	{ return RETURN;}
 (case) 		{ return CASE;}
 (continue) 	{ return CONTINUE;}
+(printf)	{ return PRINTLN; }
 
 
-(\+\+)			{sendValue("INCOP"); return INCOP; }
-(\-\-)			{sendValue("INCOP"); return INCOP; }
+(\+\+)			{return INCOP; }
+(\-\-)			{return DECOP; }
 
 (\|\|)			{sendValue("LOGICOP"); return LOGICOP; }
 (&&)			{sendValue("LOGICOP"); return LOGICOP; }
