@@ -88,12 +88,19 @@ parameter_list  : parameter_list COMMA type_specifier ID
 
  		
 compound_statement : LCURL statements RCURL
+ 		    {
+ 		    	$$ = assignProduction("{"+$2->getName()+"}", "LCURL statements RCURL", "compound_statement", lg);
+ 		    }
  		    | LCURL RCURL
+ 		    {
+ 		    	$$ = assignProduction("{}", "LCURL RCURL", "compound_statement", lg);
+ 		    }
  		    ;
  		    
 var_declaration : type_specifier declaration_list SEMICOLON
 		 {
-		     $$ = assignProduction($1->getName()+$2->getName()+";", "type_specifier declaration_list SEMICOLON", "var_declaration", lg);
+		     string type = "type_specifier declaration_list SEMICOLON";
+		     $$ = assignProduction($1->getName()+$2->getName()+";", type, "var_declaration", lg);
 		 }
  		 ;
  		 
@@ -109,36 +116,112 @@ type_specifier	: INT	{
  		;
  		
 declaration_list : declaration_list COMMA ID
+ 		  {
+ 		  	string type = "declaration_list COMMA ID";
+	 		$$ = assignProduction($1->getName()+","+$3->getName(), type, "declaration_list", lg);
+ 		  }
  		  | declaration_list COMMA ID LTHIRD CONST_INT RTHIRD
+ 		  {
+ 		  	string type = "declaration_list COMMA ID LTHIRD CONST_INT RTHIRD";
+ 		  	string name = $1->getName()+","+$3->getName()+"["+$5->getName()+"]";
+	 		$$ = assignProduction(name, type, "declaration_list", lg);
+ 		  }
  		  | ID
+ 		  {
+	 		$$ = assignProduction($1->getName(), "ID", "declaration_list", lg);
+ 		  }
  		  | ID LTHIRD CONST_INT RTHIRD
+ 		  {
+ 		  	string type = "ID LTHIRD CONST_INT RTHIRD";
+	 		$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "declaration_list", lg);
+ 		  }
  		  ;
  		  
 statements : statement
+	   {
+	   	$$ = assignProduction($1->getName(), "statement", "statements", lg);
+	   }
 	   | statements statement
+	   {
+	   	$$ = assignProduction($1->getName(), "statements statement", "statements", lg);
+	   }
 	   ;
 	   
 statement : var_declaration
+	  {
+	 	$$ = assignProduction($1->getName(), "var_declaration", "statement", lg);
+	  }
 	  | expression_statement
+	  {
+	 	$$ = assignProduction($1->getName(), "expression_statement", "statement", lg);
+	  }
 	  | compound_statement
+	  {
+	 	$$ = assignProduction($1->getName(), "compound_statement", "statement", lg);
+	  }
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement
+	  {
+	  	string type = "FOR LPAREN expression_statement expression_statement expression RPAREN statement";
+	  	string name = "for("+$3->getName()+$4->getName()+$5->getName()+")"+$7->getName();
+	 	$$ = assignProduction(name, type, "statement", lg);
+	  }
 	  | IF LPAREN expression RPAREN statement
+	  {
+	  	string type = "IF LPAREN expression RPAREN statement";
+	 	$$ = assignProduction("if("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	  }
 	  | IF LPAREN expression RPAREN statement ELSE statement
+	  {
+	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
+	 	$$ = assignProduction("if("+$3->getName()+")"+$5->getName()+"else "+$7->getName(), type, "statement", lg);
+	  }
 	  | WHILE LPAREN expression RPAREN statement
+	  {
+	  	string type = "WHILE LPAREN expression RPAREN statement";
+	 	$$ = assignProduction("while("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	  }	  
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON
+	  {
+	  	string type = "PRINTLN LPAREN ID RPAREN SEMICOLON";
+	 	$$ = assignProduction("printf("+$3->getName()+");", type, "statement", lg);
+	  }
 	  | RETURN expression SEMICOLON
+	  {
+	  	string type = "RETURN expression SEMICOLON";
+	 	$$ = assignProduction("return "+$2->getName()+";", type, "statement", lg);
+	  }
 	  ;
 	  
-expression_statement 	: SEMICOLON			
+expression_statement 	: SEMICOLON
+			{
+				$$ = assignProduction(";", "SEMICOLON", "expression_statement", lg);
+			}			
 			| expression SEMICOLON 
+			{
+				$$ = assignProduction($1->getName()+";", "expression SEMICOLON", "expression_statement", lg);
+			}
 			;
 	  
-variable : ID 		
+variable : ID
+	 {
+	 	$$ = assignProduction($1->getName(), "ID", "variable", lg);
+	 } 		
 	 | ID LTHIRD expression RTHIRD 
+	 {
+	 	string type = "ID LTHIRD expression RTHIRD";
+	 	$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "variable", lg);
+	 }
 	 ;
 	 
  expression : logic_expression	
+ 	   {
+ 	   	$$ = assignProduction($1->getName(), "logic_expression", "expression", lg);
+ 	   }
 	   | variable ASSIGNOP logic_expression 	
+	   {
+	   	string type = "variable ASSIGNOP logic_expression";
+	   	$$ = assignProduction($1->getName()+"="+$3->getName(), type, "expression", lg);
+	   }
 	   ;
 			
 logic_expression : rel_expression 	
@@ -180,7 +263,7 @@ term :	unary_expression
      }
      |  term MULOP unary_expression
      {
-     	$$ = assignProduction($1->getName()+$2->getName()+$3-getName(), "term MULOP unary_expression", "term", lg);
+     	$$ = assignProduction($1->getName()+$2->getName()+$3->getName(), "term MULOP unary_expression", "term", lg);
      }
      ;
 
