@@ -58,17 +58,18 @@ SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE 
 
 start : program
 	{
-		$$ = assignProduction($1->getName(), "program", "start", lg);
+		//$$ = assignProduction($1->getName(), "program", "start", lg);
+		fprintf(lg, "Line %d: start : program\n\n", line_count); 
 	}
 	;
 
 program : program unit 
 	{
-		$$ = assignProduction($1->getName()+$2->getName(), "program unit", "program", lg);
+		$$ = assignProduction($1->getName()+$2->getName()+"\n", "program unit", "program", lg);
 	}
 	| unit
 	{
-		$$ = assignProduction($1->getName(), "unit", "program", lg);
+		$$ = assignProduction($1->getName()+"\n", "unit", "program", lg);
 	}
 	;
 	
@@ -82,7 +83,7 @@ unit : var_declaration
      }
      | func_definition
      {
-     	$$ = assignProduction($1->getName(), "func_declaration", "unit", lg);
+     	$$ = assignProduction($1->getName(), "func_definition", "unit", lg);
      }
      ;
      
@@ -138,11 +139,11 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		
 compound_statement : LCURL statements RCURL
  		    {
- 		    	$$ = assignProduction("{"+$2->getName()+"}", "LCURL statements RCURL", "compound_statement", lg);
+ 		    	$$ = assignProduction("{\n"+$2->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
  		    }
  		    | LCURL RCURL
  		    {
- 		    	$$ = assignProduction("{}", "LCURL RCURL", "compound_statement", lg);
+ 		    	$$ = assignProduction("{\n}\n", "LCURL RCURL", "compound_statement", lg);
  		    }
  		    ;
  		    
@@ -188,11 +189,11 @@ declaration_list : declaration_list COMMA ID
  		  
 statements : statement
 	   {
-	   	$$ = assignProduction($1->getName(), "statement", "statements", lg);
+	   	$$ = assignProduction($1->getName()+"\n", "statement", "statements", lg);
 	   }
 	   | statements statement
 	   {
-	   	$$ = assignProduction($1->getName()+$2->getName(), "statements statement", "statements", lg);
+	   	$$ = assignProduction($1->getName()+$2->getName()+"\n", "statements statement", "statements", lg);
 	   }
 	   ;
 	   
@@ -362,11 +363,11 @@ factor	: variable
 	
 argument_list : arguments
 		{
-			$$ = assignProduction($1->getName(), "arguments", "arguments_list", lg);
+			$$ = assignProduction($1->getName(), "arguments", "argument_list", lg);
 		} 
 		|
 		{
-			$$ = assignProduction("", "", "arguments_list", lg);
+			$$ = assignProduction("", "", "argument_list", lg);
 		}
 		;
 	
@@ -376,7 +377,7 @@ arguments : arguments COMMA logic_expression
 		}
 	      | logic_expression 
 	      {
-	      		$$ = assignProduction($1->getName(), "arguments COMMA logic_expression", "arguments", lg);
+	      		$$ = assignProduction($1->getName(), "logic_expression", "arguments", lg);
 	      }
 	      ;
 	      
@@ -401,7 +402,10 @@ int main(int argc,char *argv[])
 	yyin=fp;
 	yyparse();
 	
-
+	
+	fprintf(lg, "\nTotal lines: %d\nTotal errors: %d\n\n", line_count, error_count);
+	
+	
 	fclose(yyin);
 	fclose(lg);
 	fclose(err);
