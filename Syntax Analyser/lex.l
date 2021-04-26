@@ -148,8 +148,8 @@ Ill3 ({Number}(\.{Number})((e|E)[+-]?{Number})(\.+{Number}*)+)
 Illnum {Ill1}|{Ill2}|{Ill3}
 
 %%
-[ \t]+ {}
-(\n)|(\r\n) {line_count++; return NEWLINE; }
+[ \t]+ 			{}
+(\n)|(\r\n)			{line_count++;}
 
 
 "//"				{ st_ln = line_count; comment += lexString(); BEGIN SINCOMM; }
@@ -289,6 +289,9 @@ Illnum {Ill1}|{Ill2}|{Ill3}
 					cout << "Ill formed number " << yytext << endl << endl;
 					error_count++;
 				}
-																	
+
+												
 . 			{printf("Mysterious character %s found\n",yytext);}
+
+
 %%

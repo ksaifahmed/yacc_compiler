@@ -25,12 +25,12 @@ FILE * err;
 
 void yyerror(char *s)
 {
-	printf("error: %s", s);
+	fprintf(lg, "error: %s", s);
 }
 
 SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE * log_p)
 {
-	fprintf(log_p, "Line %d: %s : %s\n\n%s", line_count, nonterminal.c_str() ,type.c_str(), name.c_str()); 
+	fprintf(log_p, "Line %d: %s : %s\n\n%s\n\n", line_count, nonterminal.c_str() ,type.c_str(), name.c_str()); 
 	return new SymbolInfo(name, type);
 }
 %}
@@ -58,32 +58,81 @@ SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE 
 
 start : program
 	{
-		//write your code in this block in all the similar blocks below
+		$$ = assignProduction($1->getName(), "program", "start", lg);
 	}
 	;
 
 program : program unit 
+	{
+		$$ = assignProduction($1->getName()+$2->getName(), "program unit", "program", lg);
+	}
 	| unit
+	{
+		$$ = assignProduction($1->getName(), "unit", "program", lg);
+	}
 	;
 	
 unit : var_declaration
+     {
+     	$$ = assignProduction($1->getName(), "var_declaration", "unit", lg);
+     }
      | func_declaration
+     {
+     	$$ = assignProduction($1->getName(), "func_declaration", "unit", lg);
+     }
      | func_definition
+     {
+     	$$ = assignProduction($1->getName(), "func_declaration", "unit", lg);
+     }
      ;
      
 func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON
+		{
+			string type = "type_specifier ID LPAREN parameter_list RPAREN SEMICOLON";
+			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+");";
+			$$ = assignProduction(name, type, "func_declaration", lg);
+		}
 		| type_specifier ID LPAREN RPAREN SEMICOLON
+		{
+			string type = "type_specifier ID LPAREN RPAREN SEMICOLON";
+			string name = $1->getName()+" "+$2->getName()+"();";
+			$$ = assignProduction(name, type, "func_declaration", lg);
+		}
 		;
 		 
 func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement
+		{
+			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$6->getName();
+			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
+			$$ = assignProduction(name, type, "func_definition", lg);
+		}
 		| type_specifier ID LPAREN RPAREN compound_statement
+		{
+			string name = $1->getName()+" "+$2->getName()+"()"+$5->getName();
+			string type = "type_specifier ID LPAREN RPAREN compound_statement";
+			$$ = assignProduction(name, type, "func_definition", lg);
+		}
  		;				
 
 
 parameter_list  : parameter_list COMMA type_specifier ID
+		{
+			string type = "parameter_list COMMA type_specifier ID";
+			$$ = assignProduction($1->getName()+","+$3->getName()+" "+$4->getName(), type, "parameter_list", lg);
+		}
 		| parameter_list COMMA type_specifier
+		{
+			string type = "parameter_list COMMA type_specifier";
+			$$ = assignProduction($1->getName()+","+$3->getName(), type, "parameter_list", lg);
+		}
  		| type_specifier ID
+		{
+			$$ = assignProduction($1->getName()+" "+$2->getName(), "type_specifier ID", "parameter_list", lg);
+		}
 		| type_specifier
+		{
+			$$ = assignProduction($1->getName(), "type_specifier", "parameter_list", lg);
+		}
  		;
 
  		
@@ -100,7 +149,7 @@ compound_statement : LCURL statements RCURL
 var_declaration : type_specifier declaration_list SEMICOLON
 		 {
 		     string type = "type_specifier declaration_list SEMICOLON";
-		     $$ = assignProduction($1->getName()+$2->getName()+";", type, "var_declaration", lg);
+		     $$ = assignProduction($1->getName()+" "+$2->getName()+";", type, "var_declaration", lg);
 		 }
  		 ;
  		 
@@ -143,7 +192,7 @@ statements : statement
 	   }
 	   | statements statement
 	   {
-	   	$$ = assignProduction($1->getName(), "statements statement", "statements", lg);
+	   	$$ = assignProduction($1->getName()+$2->getName(), "statements statement", "statements", lg);
 	   }
 	   ;
 	   
@@ -213,7 +262,7 @@ variable : ID
 	 }
 	 ;
 	 
- expression : logic_expression	
+expression : logic_expression	
  	   {
  	   	$$ = assignProduction($1->getName(), "logic_expression", "expression", lg);
  	   }
@@ -316,6 +365,9 @@ argument_list : arguments
 			$$ = assignProduction($1->getName(), "arguments", "arguments_list", lg);
 		} 
 		|
+		{
+			$$ = assignProduction("", "", "arguments_list", lg);
+		}
 		;
 	
 arguments : arguments COMMA logic_expression
