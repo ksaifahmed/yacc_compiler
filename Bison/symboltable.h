@@ -31,6 +31,7 @@ class SymbolInfo{
 
 		string getName(){ return name; }
 		string getType(){ return type; }
+		string getDataType() { return data_type; }
 		SymbolInfo * getNext(){ return next; }
 		bool matchDataType(string str){ return !data_type.compare(str); }
 
@@ -137,7 +138,7 @@ class ScopeTable
             SymbolInfo * curr = Lookup(key);
             if(curr != NULL)
             {
-                cout << curr -> getName() << " already exists in current ScopeTable" << endl << endl;
+                //cout << curr -> getName() << " already exists in current ScopeTable" << endl << endl;
                 return false;
             }
             int index = hash_fuc(key);
@@ -223,6 +224,25 @@ class ScopeTable
                 cout << endl;
             }
             cout << endl;
+        }
+        
+        void Fprint(FILE * lp)
+        {
+            fprintf(lp, "\nScopeTable # %s\n", id.c_str());
+            for(int i = 0; i < bucket_size; i++)
+            {
+                SymbolInfo * curr = scope_array[i];
+                if(curr == NULL) continue;
+                fprintf(lp, " %d --> ", i);
+                while(true)
+                {
+                    if(curr == NULL) break;
+                    fprintf(lp, "< %s , %s >", curr -> getName().c_str(), curr -> getType().c_str());
+                    curr = curr -> getNext();
+                }
+                fprintf(lp, "\n");
+            }
+            fprintf(lp, "\n");
         }
 
 };
@@ -340,6 +360,17 @@ class SymbolTable
             while(curr != NULL)
             {
                 curr -> Print();
+                curr = curr -> getParent();
+            }
+        }
+        
+        
+        void PrintInFile(FILE * lp)
+        {
+            ScopeTable * curr = currentScopeTable;
+            while(curr != NULL)
+            {
+                curr -> Fprint(lp);
                 curr = curr -> getParent();
             }
         }

@@ -22,6 +22,7 @@ FILE * err;
 
 SymbolTable *symbolTable;
 string data_type = "";
+vector<SymbolInfo*> params;
 
 
 void yyerror(char *s)
@@ -31,7 +32,7 @@ void yyerror(char *s)
 
 SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE * log_p)
 {
-	fprintf(log_p, "Line %d: %s : %s\n\n%s\n\n", line_count, nonterminal.c_str() ,type.c_str(), name.c_str()); 
+	fprintf(lg, "Line %d: %s : %s\n\n%s\n\n", line_count, nonterminal.c_str() ,type.c_str(), name.c_str()); 
 	return new SymbolInfo(name, type);
 }
 
@@ -42,6 +43,16 @@ string getDataType(string str)
 	else if(!str.compare("float"))
 		return "CONST_FLOAT";
 	else return "VOID";
+}
+
+void insertParams()
+{
+	while(!params.empty())
+	{
+		SymbolInfo * s = params.back();
+		params.pop_back();
+		symbolTable -> Insert(s->getName(), s->getType(), s->getDataType());
+	}
 }
 %}
 
@@ -102,34 +113,43 @@ func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON
 			string type = "type_specifier ID LPAREN parameter_list RPAREN SEMICOLON";
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+");";
 			$$ = assignProduction(name, type, "func_declaration", lg);
+			symbolTable -> Insert($2->getName(), "ID", $1->getType());
 		}
 		| type_specifier ID LPAREN RPAREN SEMICOLON
 		{
 			string type = "type_specifier ID LPAREN RPAREN SEMICOLON";
 			string name = $1->getName()+" "+$2->getName()+"();";
 			$$ = assignProduction(name, type, "func_declaration", lg);
+			symbolTable -> Insert($2->getName(), "ID", $1->getType());
 		}
 		;
 		 
-func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement
-		{
-			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$6->getName();
+func_definition : type_specifier ID LPAREN parameter_list RPAREN { symbolTable -> Insert($2->getName(), "ID", $1->getType()); } 
+		   compound_statement
+		   {
+			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$7->getName();
 			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
-		}
-		| type_specifier ID LPAREN RPAREN compound_statement
-		{
-			string name = $1->getName()+" "+$2->getName()+"()"+$5->getName();
+			
+		   }
+		| type_specifier ID LPAREN RPAREN { symbolTable -> Insert($2->getName(), "ID", $1->getType()); } compound_statement
+		  {
+			string name = $1->getName()+" "+$2->getName()+"()"+$6->getName();
 			string type = "type_specifier ID LPAREN RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
-		}
- 		;				
+		  } 
+ 		  ;				
 
 
 parameter_list  : parameter_list COMMA type_specifier ID
 		{
 			string type = "parameter_list COMMA type_specifier ID";
 			$$ = assignProduction($1->getName()+","+$3->getName()+" "+$4->getName(), type, "parameter_list", lg);
+			
+			SymbolInfo * s = new SymbolInfo($4->getName(), "ID");
+			s -> setDataType($3->getType());
+			params.push_back(s);
+			
 		}
 		| parameter_list COMMA type_specifier
 		{
@@ -139,6 +159,11 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		| type_specifier ID
 		{
 			$$ = assignProduction($1->getName()+" "+$2->getName(), "type_specifier ID", "parameter_list", lg);
+			symbolTable -> Insert($2->getName(), "ID", $1->getType());
+			
+			SymbolInfo * s = new SymbolInfo($2->getName(), "ID");
+			s -> setDataType($1->getType());
+			params.push_back(s);
 		}
 		| type_specifier
 		{
@@ -147,13 +172,17 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		;
 
  		
-compound_statement : LCURL statements RCURL
+compound_statement : LCURL {symbolTable -> EnterScope(); insertParams(); } statements RCURL
  		    {
- 		    	$$ = assignProduction("{\n"+$2->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
+ 		    	$$ = assignProduction("{\n"+$3->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
+ 		    	symbolTable -> PrintInFile(lg);
+ 		    	symbolTable -> ExitScope();
  		    }
- 		    | LCURL RCURL
+ 		    | LCURL {symbolTable -> EnterScope(); insertParams(); } RCURL
  		    {
  		    	$$ = assignProduction("{\n}\n", "LCURL RCURL", "compound_statement", lg);
+ 		    	symbolTable -> PrintInFile(lg);
+ 		    	symbolTable -> ExitScope();
  		    }
  		    ;
  		    
@@ -166,11 +195,11 @@ var_declaration : type_specifier declaration_list SEMICOLON
  		 
 type_specifier	: INT	{
 				$$ = assignProduction("int", "INT", "type_specifier", lg);
-				data_type = "CONST_INT";
+				data_type = "INT";
 			}
  		| FLOAT {
 				$$ = assignProduction("float", "FLOAT", "type_specifier", lg);
-				data_type = "CONST_FLOAT";
+				data_type = "FLOAT";
 			}
  		| VOID {
 				$$ = assignProduction("void", "VOID", "type_specifier", lg);
@@ -421,7 +450,7 @@ int main(int argc,char *argv[])
 	yyparse();
 	
 	
-	symbolTable -> PrintAllScopes();
+	symbolTable -> PrintInFile(lg);
 	fprintf(lg, "\nTotal lines: %d\nTotal errors: %d\n\n", line_count, error_count);
 	
 	
