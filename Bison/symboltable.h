@@ -338,14 +338,14 @@ class SymbolTable
             SymbolInfo * temp = NULL;
             while(curr != NULL)
             {
-                temp = curr -> LookupWithPrint(key);
+                temp = curr -> Lookup(key);
                 if(temp != NULL)
                 {
                     break;
                 }
                 curr = curr -> getParent();
             }
-            if(temp == NULL) cout << "Not found" << endl << endl;
+            //if(temp == NULL) cout << "Not found" << endl << endl;
             return temp;
         }
 

@@ -22,6 +22,7 @@ FILE * err;
 
 SymbolTable *symbolTable;
 string data_type = "";
+string value_type = "";
 vector<SymbolInfo*> params;
 
 
@@ -53,6 +54,24 @@ void insertParams()
 		params.pop_back();
 		symbolTable -> Insert(s->getName(), s->getType(), s->getDataType());
 	}
+}
+
+void printError(string msg)
+{
+	fprintf(lg, "Error at line %d: %s\n\n", line_count, msg.c_str());
+	error_count++;
+}
+
+bool isNumber(string str)
+{
+    if(str.at(0)==45 && str.size()==1) return false;
+	for(int i=0; i<str.size(); i++)
+	{
+	    char c = str.at(i);
+	    if(c==45 and i==0) continue;
+	    if(c<48 || c>57) return false;
+	}
+	return true;
 }
 %}
 
@@ -211,26 +230,43 @@ type_specifier	: INT	{
 declaration_list : declaration_list COMMA ID
  		  {
  		  	string type = "declaration_list COMMA ID";
-	 		$$ = assignProduction($1->getName()+","+$3->getName(), type, "declaration_list", lg);
-	 		symbolTable -> Insert($3->getName(), "ID", data_type);
+	 		if(symbolTable -> Insert($3->getName(), "ID", data_type))
+		 		$$ = assignProduction($1->getName()+","+$3->getName(), type, "declaration_list", lg);
+		 	else{
+		 		printError("Multiple declaration of "+$3->getName());	
+		 		$$ = assignProduction($1->getName()+","+$3->getName(), type, "declaration_list", lg);
+		 	}	
  		  }
  		  | declaration_list COMMA ID LTHIRD CONST_INT RTHIRD
  		  {
  		  	string type = "declaration_list COMMA ID LTHIRD CONST_INT RTHIRD";
  		  	string name = $1->getName()+","+$3->getName()+"["+$5->getName()+"]";
-	 		$$ = assignProduction(name, type, "declaration_list", lg);
-	 		symbolTable -> Insert($3->getName(), "ID", data_type);
+ 		  	if(symbolTable -> Insert($3->getName(), "ID", data_type))
+	 			$$ = assignProduction(name, type, "declaration_list", lg);
+	 		else{
+	 			printError("Multiple declaration of "+$3->getName());
+	 			$$ = assignProduction(name, type, "declaration_list", lg);
+	 		}	
+	 		
  		  }
  		  | ID
  		  {
-	 		$$ = assignProduction($1->getName(), "ID", "declaration_list", lg);
-	 		symbolTable -> Insert($1->getName(), "ID", data_type);
+ 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type))
+	 			$$ = assignProduction($1->getName(), "ID", "declaration_list", lg);
+	 		else{
+	 			printError("Multiple declaration of "+$1->getName());
+	 			$$ = assignProduction($1->getName(), "ID", "declaration_list", lg);
+	 		}
  		  }
  		  | ID LTHIRD CONST_INT RTHIRD
  		  {
  		  	string type = "ID LTHIRD CONST_INT RTHIRD";
-	 		$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "declaration_list", lg);
-	 		symbolTable -> Insert($1->getName(), "ID", data_type);
+ 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type))
+		 		$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "declaration_list", lg);
+		 	else{
+		 		printError("Multiple declaration of "+$1->getName());
+		 		$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "declaration_list", lg);
+		 	}	
  		  }
  		  ;
  		  
@@ -302,11 +338,21 @@ expression_statement 	: SEMICOLON
 variable : ID
 	 {
 	 	$$ = assignProduction($1->getName(), "ID", "variable", lg);
+	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+	 	if(sp != NULL) $$ -> setDataType(sp -> getDataType());
 	 } 		
 	 | ID LTHIRD expression RTHIRD 
 	 {
 	 	string type = "ID LTHIRD expression RTHIRD";
-	 	$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "variable", lg);
+	 	string name = $1->getName()+"["+$3->getName()+"]";
+	 	
+	 	$$ = new SymbolInfo(name, type);
+	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+	 	if(sp != NULL) $$ -> setDataType(sp -> getDataType());
+	 	
+	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
+	 	if(!isNumber($3->getName())) printError("Expression inside third brackets not an integer");
+	 	fprintf(lg, "%s\n\n", name.c_str());
 	 }
 	 ;
 	 
@@ -317,7 +363,12 @@ expression : logic_expression
 	   | variable ASSIGNOP logic_expression 	
 	   {
 	   	string type = "variable ASSIGNOP logic_expression";
-	   	$$ = assignProduction($1->getName()+"="+$3->getName(), type, "expression", lg);
+	   	string name = $1->getName()+"="+$3->getName();
+	   	$$ = new SymbolInfo(name, type);
+	   	
+	   	fprintf(lg, "Line %d: expression : %s\n\n", line_count, type.c_str());
+	   	if(value_type.compare($1->getDataType())) printError("Type Mismatch");
+	   	fprintf(lg, "%s\n\n", name.c_str());
 	   }
 	   ;
 			
@@ -357,10 +408,20 @@ simple_expression : term
 term :	unary_expression
      {
      	$$ = assignProduction($1->getName(), "unary_expression", "term", lg);
+     	$$ -> setDataType($1->getDataType());
      }
      |  term MULOP unary_expression
      {
-     	$$ = assignProduction($1->getName()+$2->getName()+$3->getName(), "term MULOP unary_expression", "term", lg);
+     	string name = $1->getName()+$2->getName()+$3->getName();
+     	string type = "term MULOP unary_expression";
+     	$$ = new SymbolInfo(name, type);
+     	
+     	fprintf(lg, "Line %d: term : %s\n\n", line_count, type.c_str());
+     	
+	if(!$2->getName().compare("%")){
+		if($1->getDataType().compare("INT") || $3->getDataType().compare("INT")) printError("Non-Integer operand on modulus operator");
+	}
+	fprintf(lg, "%s\n\n", name.c_str());
      }
      ;
 
@@ -374,7 +435,8 @@ unary_expression : ADDOP unary_expression
 		 }		 
 		 | factor 
 		 {
-		 	$$ = assignProduction($1->getName(), "factor", "unary_expression", lg);	
+		 	$$ = assignProduction($1->getName(), "factor", "unary_expression", lg);
+		 	$$ -> setDataType(data_type);	
 		 }
 		 ;
 	
@@ -392,11 +454,13 @@ factor	: variable
 	}	
 	| CONST_INT 
 	{
-		$$ = assignProduction($1->getName(), "CONST_INT", "factor", lg);		
+		$$ = assignProduction($1->getName(), "CONST_INT", "factor", lg);	
+		value_type = "INT";	
 	}	
 	| CONST_FLOAT
 	{
 		$$ = assignProduction($1->getName(), "CONST_FLOAT", "factor", lg);
+		value_type = "FLOAT";
 	}	
 	| variable INCOP 
 	{
