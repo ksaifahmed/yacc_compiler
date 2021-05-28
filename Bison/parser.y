@@ -72,7 +72,8 @@ void insertParams()
 // %left 
 // %right
 
-// %nonassoc 
+%nonassoc FAKE_ELSE
+%nonassoc ELSE
 
 
 %%
@@ -261,7 +262,7 @@ statement : var_declaration
 	  	string name = "for("+$3->getName()+$4->getName()+$5->getName()+")"+$7->getName();
 	 	$$ = assignProduction(name, type, "statement", lg);
 	  }
-	  | IF LPAREN expression RPAREN statement
+	  | IF LPAREN expression RPAREN statement %prec FAKE_ELSE
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement";
 	 	$$ = assignProduction("if("+$3->getName()+")"+$5->getName(), type, "statement", lg);

@@ -85,7 +85,8 @@ extern int yydebug;
     MULOP = 291,
     CONST_FLOAT = 292,
     CONST_INT = 293,
-    ID = 294
+    ID = 294,
+    FAKE_ELSE = 295
   };
 #endif
 /* Tokens.  */
@@ -126,6 +127,7 @@ extern int yydebug;
 #define CONST_FLOAT 292
 #define CONST_INT 293
 #define ID 294
+#define FAKE_ELSE 295
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -134,7 +136,7 @@ union YYSTYPE
 #line 61 "parser.y"
 SymbolInfo* si; string* str;
 
-#line 138 "y.tab.h"
+#line 140 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
