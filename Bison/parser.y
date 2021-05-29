@@ -241,7 +241,7 @@ declaration_list : declaration_list COMMA ID
  		  {
  		  	string type = "declaration_list COMMA ID LTHIRD CONST_INT RTHIRD";
  		  	string name = $1->getName()+","+$3->getName()+"["+$5->getName()+"]";
- 		  	if(symbolTable -> Insert($3->getName(), "ID", data_type))
+ 		  	if(symbolTable -> Insert($3->getName(), "ID", data_type, "array"))
 	 			$$ = assignProduction(name, type, "declaration_list", lg);
 	 		else{
 	 			printError("Multiple declaration of "+$3->getName());
@@ -261,7 +261,7 @@ declaration_list : declaration_list COMMA ID
  		  | ID LTHIRD CONST_INT RTHIRD
  		  {
  		  	string type = "ID LTHIRD CONST_INT RTHIRD";
- 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type))
+ 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type,"array"))
 		 		$$ = assignProduction($1->getName()+"["+$3->getName()+"]", type, "declaration_list", lg);
 		 	else{
 		 		printError("Multiple declaration of "+$1->getName());
@@ -337,9 +337,19 @@ expression_statement 	: SEMICOLON
 	  
 variable : ID
 	 {
-	 	$$ = assignProduction($1->getName(), "ID", "variable", lg);
-	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+ 	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+	 	
+	 	string name = $1->getName();
+	 	string type = "ID";
+	 	$$ = new SymbolInfo(name, type);
 	 	if(sp != NULL) $$ -> setDataType(sp -> getDataType());
+	 	
+	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
+	 	if(sp!=NULL){
+	 		if(!sp->getVarType().compare("array")) printError("Type mismatch, " + $1->getName() + " is an array");
+	 	}	
+	 	else printError("Undeclared variable "+$1->getName());
+	 	fprintf(lg, "%s\n\n", name.c_str());
 	 } 		
 	 | ID LTHIRD expression RTHIRD 
 	 {
@@ -351,6 +361,7 @@ variable : ID
 	 	if(sp != NULL) $$ -> setDataType(sp -> getDataType());
 	 	
 	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
+	 	if(sp == NULL) printError("Undeclared variable "+$1->getName());
 	 	if(!isNumber($3->getName())) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 }
@@ -366,8 +377,15 @@ expression : logic_expression
 	   	string name = $1->getName()+"="+$3->getName();
 	   	$$ = new SymbolInfo(name, type);
 	   	
+	   	
+	   	string var_name = "";
+	   	if ($1->getName().find("[") != string::npos) {
+        		 var_name = $1->getName().substr(0, $1->getName().find("["));
+        	}else var_name = $1->getName();
+        	SymbolInfo * sp = symbolTable -> Lookup(var_name);
+	   	
 	   	fprintf(lg, "Line %d: expression : %s\n\n", line_count, type.c_str());
-	   	if(value_type.compare($1->getDataType())) printError("Type Mismatch");
+	   	if(sp!=NULL) if(value_type.compare($1->getDataType())) printError("Type Mismatch");
 	   	fprintf(lg, "%s\n\n", name.c_str());
 	   }
 	   ;

@@ -8,6 +8,7 @@ using namespace std;
 class SymbolInfo{
 	string name, type, data_type;
 	SymbolInfo * next;
+	string var_type;
 
 	public:
 		SymbolInfo(){ next = NULL; }
@@ -17,6 +18,8 @@ class SymbolInfo{
 			name = n;
 			type = k;
     			next = NULL;
+    			data_type ="";
+    			var_type = "";
 		}
 
 		~SymbolInfo()
@@ -28,10 +31,12 @@ class SymbolInfo{
 		void setType(string k){ type = k; }
 		void setNext(SymbolInfo *s) { next = s; }
 		void setDataType(string s) { data_type = s; }
+		void setVarType(string s){ var_type = s; }
 
 		string getName(){ return name; }
 		string getType(){ return type; }
 		string getDataType() { return data_type; }
+		string getVarType() { return var_type; }
 		SymbolInfo * getNext(){ return next; }
 		bool matchDataType(string str){ return !data_type.compare(str); }
 
@@ -168,6 +173,43 @@ class ScopeTable
             return true;
         }
 
+
+        bool Insert(string key, string type, string data_type, string var)
+        {
+            SymbolInfo * curr = Lookup(key);
+            if(curr != NULL)
+            {
+                //cout << curr -> getName() << " already exists in current ScopeTable" << endl << endl;
+                return false;
+            }
+            int index = hash_fuc(key);
+            int chain_position = 0;
+            SymbolInfo * p = new SymbolInfo(key, type);
+            p -> setDataType(data_type);
+            p -> setVarType(var);	    		
+		
+            if(scope_array[index] == NULL)
+            {
+                scope_array[index] = p;
+            }
+            else
+            {
+                SymbolInfo * curr = scope_array[index];
+                while(true)
+                {
+                    chain_position++;
+                    if(curr -> getNext() == NULL)
+                    {
+                        curr -> setNext(p);
+                        break;
+                    }
+                    curr = curr -> getNext();
+                }
+            }
+            //cout << "Inserted in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl << endl;
+            return true;
+        }
+        
 
         bool Delete(string key)
         {
@@ -325,6 +367,11 @@ class SymbolTable
         bool Insert(string key, string type, string data_type)
         {
             return currentScopeTable -> Insert(key, type, data_type);
+        }
+        
+        bool Insert(string key, string type, string data_type, string var)
+        {
+            return currentScopeTable -> Insert(key, type, data_type, var);
         }
 
         bool Remove(string key)

@@ -7,8 +7,6 @@ int main(){
 	a[2.5]=1;
 	i=2.3;
 	j=2%3.7;
-	
-	//baki ei 3ta
 	a=4;
 	func(a);
 	b=8;

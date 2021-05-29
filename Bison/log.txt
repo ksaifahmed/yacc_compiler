@@ -344,6 +344,8 @@ j=2%3.7;
 
 Line 10: variable : ID
 
+Error at line 10: Type mismatch, a is an array
+
 a
 
 Line 10: factor : CONST_INT
@@ -393,6 +395,8 @@ a=4;
 
 
 Line 11: variable : ID
+
+Error at line 11: Type mismatch, a is an array
 
 a
 
@@ -477,6 +481,8 @@ func(a);
 
 Line 12: variable : ID
 
+Error at line 12: Undeclared variable b
+
 b
 
 Line 12: factor : CONST_INT
@@ -504,8 +510,6 @@ Line 12: logic_expression : rel_expression
 8
 
 Line 12: expression : variable ASSIGNOP logic_expression
-
-Error at line 12: Type Mismatch
 
 b=8
 
@@ -662,5 +666,5 @@ ScopeTable # 1
 
 
 Total lines: 15
-Total errors: 6
+Total errors: 8
 
