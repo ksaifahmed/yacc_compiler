@@ -59,6 +59,7 @@ void insertParams()
 void printError(string msg)
 {
 	fprintf(lg, "Error at line %d: %s\n\n", line_count, msg.c_str());
+	fprintf(err, "Error at line %d: %s\n\n", line_count, msg.c_str());
 	error_count++;
 }
 
