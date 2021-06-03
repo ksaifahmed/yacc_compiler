@@ -24,6 +24,7 @@ SymbolTable *symbolTable;
 string data_type = "";
 string value_type = "";
 vector<SymbolInfo*> params;
+vector<string> args;
 
 
 void yyerror(char *s)
@@ -39,12 +40,12 @@ SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE 
 
 void insertParams()
 {
-	while(!params.empty())
+	for(int i=0; i<params.size(); i++)
 	{
-		SymbolInfo * s = params.back();
-		params.pop_back();
-		symbolTable -> Insert(s->getName(), s->getType(), s->getDataType());
+		SymbolInfo * s = params.at(i);
+		symbolTable -> Insert(s->getName(), s->getType(), s->getDataType());	
 	}
+	//params.clear();
 }
 
 void printError(string msg)
@@ -52,6 +53,16 @@ void printError(string msg)
 	fprintf(lg, "Error at line %d: %s\n\n", line_count, msg.c_str());
 	fprintf(err, "Error at line %d: %s\n\n", line_count, msg.c_str());
 	error_count++;
+}
+
+bool FindParam(string name)
+{
+	for(int i=0; i<params.size(); i++)
+	{
+		SymbolInfo * s = params.at(i);
+		if(!name.compare(s->getName())) return true;
+	}
+	return false;
 }
 
 %}
@@ -109,32 +120,136 @@ unit : var_declaration
      }
      ;
      
-func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON
+func_declaration : type_specifier ID LPAREN parameter_list RPAREN 
+		{
+			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
+			if(sp!=NULL)
+			{
+				string f_name = $2 -> getName();
+				printError("Multiple declaration of "+f_name);
+			}
+		}
+		SEMICOLON
 		{
 			string type = "type_specifier ID LPAREN parameter_list RPAREN SEMICOLON";
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+");";
 			$$ = assignProduction(name, type, "func_declaration", lg);
-			symbolTable -> Insert($2->getName(), "ID", $1->getType());
+			
+			FunctionInfo f;
+			for(int i=0; i<params.size(); i++)
+			{
+				SymbolInfo * s = params.at(i);
+				f.insertParams(s->getName(), s->getType(), s->getDataType());
+			}
+			params.clear();
+			symbolTable -> Insert($2->getName(), "ID", $1->getType(), "function", f);
+			
+			
 		}
-		| type_specifier ID LPAREN RPAREN SEMICOLON
+		| type_specifier ID LPAREN RPAREN 
+		{
+			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
+			if(sp!=NULL)
+			{
+				string f_name = $2 -> getName();
+				printError("Multiple declaration of "+f_name);
+			}	
+		}
+		SEMICOLON
 		{
 			string type = "type_specifier ID LPAREN RPAREN SEMICOLON";
 			string name = $1->getName()+" "+$2->getName()+"();";
 			$$ = assignProduction(name, type, "func_declaration", lg);
-			symbolTable -> Insert($2->getName(), "ID", $1->getType());
+			
+			FunctionInfo f;
+			for(int i=0; i<params.size(); i++)
+			{
+				SymbolInfo * s = params.at(i);
+				f.insertParams(s->getName(), s->getType(), s->getDataType());
+			}
+			params.clear();
+			symbolTable -> Insert($2->getName(), "ID", $1->getType(), "function", f);
 		}
 		;
 		 
-func_definition : type_specifier ID LPAREN parameter_list RPAREN { symbolTable -> Insert($2->getName(), "ID", $1->getType()); } 
+func_definition : type_specifier ID LPAREN parameter_list RPAREN 
+		{
+			//return type mismatch with declaration
+			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
+			if(sp!=NULL)
+			{
+				string type = $1 -> getType();
+				string f_name = $2 -> getName();
+				if(type.compare(sp -> getDataType()) && !sp->getVarType().compare("function")) 
+					printError("Return type mismatch with function declaration in function "+f_name);
+				else if(!sp->getVarType().compare("function"))
+				{
+					if(sp->getFunctionInfo().param_num() != params.size())
+						printError("Total number of arguments mismatch with declaration in function "+f_name);
+					else
+					{
+						///params sequence
+						for(int i=0; i<params.size(); i++)
+						{
+							SymbolInfo * s = params.at(i);
+							if(!sp->getFunctionInfo().match(s->getName(), s->getDataType(), i))
+							{
+								printError("Parameter sequence/type mismatches with declaration");
+								break;
+							}
+						}
+					}
+				}
+				else printError("Multiple declaration of "+f_name);
+			}
+			else
+			{
+				FunctionInfo f;
+				for(int i=0; i<params.size(); i++)
+				{
+					SymbolInfo * s = params.at(i);
+					f.insertParams(s->getName(), s->getType(), s->getDataType());
+				}
+				symbolTable -> Insert($2->getName(), "ID", $1->getType(), "function", f);
+			}
+		}
 		   compound_statement
 		   {
+		   	params.clear();
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$7->getName();
 			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
 			
 		   }
-		| type_specifier ID LPAREN RPAREN { symbolTable -> Insert($2->getName(), "ID", $1->getType()); } compound_statement
+		  
+		  
+		  
+		   
+		| type_specifier ID LPAREN RPAREN 
+		{ 
+			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
+			if(sp!=NULL)
+			{
+				string type = $1 -> getType();
+				string f_name = $2 -> getName();
+				if(type.compare(sp -> getDataType()) && !sp->getVarType().compare("function")) 
+					printError("Return type mismatch with function declaration in function "+f_name);
+				else if(!sp->getVarType().compare("function"))
+				{
+					if(sp->getFunctionInfo().param_num() > 0)
+						printError("no arguments, mismatch with declaration in function "+f_name);
+				}
+			}
+			else
+			{
+				symbolTable -> Insert($2->getName(), "ID", $1->getType(), "function"); 
+			}
+			params.clear();
+			
+		}
+		compound_statement
 		  {
+		  	params.clear();
 			string name = $1->getName()+" "+$2->getName()+"()"+$6->getName();
 			string type = "type_specifier ID LPAREN RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
@@ -144,6 +259,11 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN { symbolTable -
 
 parameter_list  : parameter_list COMMA type_specifier ID
 		{
+			
+			if(FindParam($4->getName())) {
+    				printError("Multiple declaration of a in parameter");
+			}
+			
 			string type = "parameter_list COMMA type_specifier ID";
 			$$ = assignProduction($1->getName()+","+$3->getName()+" "+$4->getName(), type, "parameter_list", lg);
 			//symbolTable -> Insert($4->getName(), "ID", $3->getType());
@@ -191,7 +311,15 @@ compound_statement : LCURL {symbolTable -> EnterScope(); insertParams(); } state
 var_declaration : type_specifier declaration_list SEMICOLON
 		 {
 		     string type = "type_specifier declaration_list SEMICOLON";
-		     $$ = assignProduction($1->getName()+" "+$2->getName()+";", type, "var_declaration", lg);
+		     string name = $1->getName()+" "+$2->getName()+";";
+		     $$ = new SymbolInfo(name, type);
+		     
+		     fprintf(lg, "Line %d: var_declaration : %s\n\n", line_count, type.c_str());
+	 	     if(!$1->getType().compare("VOID"))
+	 	     {
+	 		printError("Variable type cannot be void");
+	 	     }	
+	 	     fprintf(lg, "%s\n\n", name.c_str());
 		 }
  		 ;
  		 
@@ -212,7 +340,7 @@ type_specifier	: INT	{
 declaration_list : declaration_list COMMA ID
  		  {
  		  	string type = "declaration_list COMMA ID";
-	 		if(symbolTable -> Insert($3->getName(), "ID", data_type))
+	 		if(symbolTable -> Insert($3->getName(), "ID", data_type, "single_var"))
 		 		$$ = assignProduction($1->getName()+","+$3->getName(), type, "declaration_list", lg);
 		 	else{
 		 		printError("Multiple declaration of "+$3->getName());	
@@ -233,7 +361,7 @@ declaration_list : declaration_list COMMA ID
  		  }
  		  | ID
  		  {
- 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type))
+ 		  	if(symbolTable -> Insert($1->getName(), "ID", data_type, "single_var"))
 	 			$$ = assignProduction($1->getName(), "ID", "declaration_list", lg);
 	 		else{
 	 			printError("Multiple declaration of "+$1->getName());
@@ -277,28 +405,37 @@ statement : var_declaration
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement
 	  {
 	  	string type = "FOR LPAREN expression_statement expression_statement expression RPAREN statement";
-	  	string name = "for ("+$3->getName()+$4->getName()+$5->getName()+")"+$7->getName();
+	  	string name = "for ("+$3->getName()+$4->getName()+$5->getName()+") "+$7->getName();
 	 	$$ = assignProduction(name, type, "statement", lg);
 	  }
 	  | IF LPAREN expression RPAREN statement %prec FAKE_ELSE
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement";
-	 	$$ = assignProduction("if ("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
 	  }
 	  | IF LPAREN expression RPAREN statement ELSE statement
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
-	 	$$ = assignProduction("if ("+$3->getName()+")"+$5->getName()+"else "+$7->getName(), type, "statement", lg);
+	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName()+"else "+$7->getName(), type, "statement", lg);
 	  }
 	  | WHILE LPAREN expression RPAREN statement
 	  {
 	  	string type = "WHILE LPAREN expression RPAREN statement";
-	 	$$ = assignProduction("while ("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	 	$$ = assignProduction("while ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
 	  }	  
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON
 	  {
 	  	string type = "PRINTLN LPAREN ID RPAREN SEMICOLON";
-	 	$$ = assignProduction("printf("+$3->getName()+");", type, "statement", lg);
+	  	string name = "printf("+$3->getName()+");";
+	  	SymbolInfo * sp = symbolTable -> Lookup($3->getName());
+	 	$$ = new SymbolInfo(name, type);
+	 	
+	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
+	 	if(sp==NULL)
+	 	{
+	 		printError("Undeclared variable "+$3->getName());
+	 	}
+	 	fprintf(lg, "%s\n\n", name.c_str());
 	  }
 	  | RETURN expression SEMICOLON
 	  {
@@ -344,6 +481,8 @@ variable : ID
 	 	
 	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
 	 	if(sp == NULL) printError("Undeclared variable "+$1->getName());
+	 	if(sp!=NULL)
+	 		if(sp->getVarType().compare("array")) printError($1->getName() + " not an array");
 	 	if($3->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 }
@@ -381,10 +520,13 @@ expression : logic_expression
 	   	if(sp!=NULL)
 	   	{
 	   		string temp = "";
-	   		if(!$3->getDataType().compare("VOID")) temp = ", Void Type in Right Operand";
-	   		if(!sp->getDataType().compare("FLOAT") && !$3->getDataType().compare("INT"));
-	   		else if(sp->getDataType().compare($3->getDataType())) printError("Type Mismatch" + temp);
-	   		
+	   		if(!$3->getDataType().compare("VOID")) printError("Void function used in expression");
+	   		else
+	   		{
+		   		if(!$3->getDataType().compare("NULL"));
+		   		else if(!sp->getDataType().compare("FLOAT") && !$3->getDataType().compare("INT"));
+		   		else if(sp->getDataType().compare($3->getDataType())) printError("Type Mismatch");
+	   		}	   		
 	   		$$ -> setDataType(sp->getDataType());
 	   	}else $$ -> setDataType("NULL");
 	   	fprintf(lg, "%s\n\n", name.c_str());
@@ -456,6 +598,10 @@ term :	unary_expression
      	
 	if(!$2->getName().compare("%")){
 		if($1->getDataType().compare("INT") || $3->getDataType().compare("INT")) printError("Non-Integer operand on modulus operator");
+		else if(!$3->getName().compare("0"))
+		{
+			printError("Modulus by Zero");
+		}
 	}
 	
 	if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
@@ -499,10 +645,45 @@ factor	: variable
 	}
 	| ID LPAREN argument_list RPAREN
 	{
-		$$ = assignProduction($1->getName()+"("+$3->getName()+")", "ID LPAREN argument_list RPAREN", "factor", lg);
+		string name = $1->getName()+"("+$3->getName()+")";
+		string type = "ID LPAREN argument_list RPAREN";
+		$$ = new SymbolInfo(name, type);
+		
+		fprintf(lg, "Line %d: factor : %s\n\n", line_count, type.c_str());
+		
 		SymbolInfo * sp = symbolTable -> Lookup($1->getName());
-		if(sp != NULL) $$ -> setDataType(sp->getDataType());
-		else $$ -> setDataType("NULL");		
+		if(sp != NULL) {
+			$$ -> setDataType(sp->getDataType());
+			if(!sp->getVarType().compare("function"))
+			{
+				if(sp->getFunctionInfo().param_num() != args.size())
+					printError("Total number of arguments mismatch in function "+$1->getName());
+				else
+				{
+					///args sequence
+					for(int i=0; i<args.size(); i++)
+					{
+						string arg = args.at(i);
+						if(sp->getFunctionInfo().match("FLOAT", i) && !arg.compare("INT")) continue;
+						if(!sp->getFunctionInfo().match(arg, i))
+						{
+							i++;
+							printError(to_string(i)+"th argument mismatch in function "+$1->getName());
+							break;
+						}
+					}
+				}
+			}
+			else printError($1->getName()+" is not a function");	
+			
+		}
+		else {
+			printError("Undeclared function "+$1->getName());	
+			$$ -> setDataType("NULL");
+		}
+		args.clear();
+		fprintf(lg, "%s\n\n", name.c_str());
+					
 	}	
 	| LPAREN expression RPAREN
 	{
@@ -546,10 +727,13 @@ argument_list : arguments
 arguments : arguments COMMA logic_expression
 		{
 			$$ = assignProduction($1->getName()+","+$3->getName(), "arguments COMMA logic_expression", "arguments", lg);
+			args.push_back($3->getDataType());
+			
 		}
 	      | logic_expression 
 	      {
 	      		$$ = assignProduction($1->getName(), "logic_expression", "arguments", lg);
+			args.push_back($1->getDataType());
 	      }
 	      ;
 	      

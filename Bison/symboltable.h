@@ -5,11 +5,59 @@
 #include <cstring>
 using namespace std;
 
+class var_type{
+	string type; string name; string data_type;
+	public:
+		var_type(string n, string k, string d){ name = n; type = k; data_type = d; }
+		void setName(string n){ name = n; }
+		void setType(string k){ type = k; }
+		void setDataType(string s) { data_type = s; }
+		
+		string getName(){ return name; }
+		string getType(){ return type; }
+		string getDataType() { return data_type; }
+		
+		bool match(string n, string t)
+		{
+			return (!t.compare(data_type) && !n.compare(name));
+		}
+		
+		bool match(string t)
+		{
+			return (!t.compare(data_type));
+		}		
+};
+
+class FunctionInfo{
+	bool isDefined;
+	vector<var_type*> params;
+	public:
+		FunctionInfo(){ isDefined = false; }
+		void setDefinition(bool n){ isDefined = n; }
+		void insertParams(string n, string t, string d){ params.push_back(new var_type(n,t,d));}
+		int param_num(){ return params.size(); }
+		bool getIsDefined(){ return isDefined; }
+		
+		bool match(string n, string t, int i)
+		{
+			return params.at(i) -> match(n,t);
+		}
+		
+		bool match(string t, int i)
+		{
+			return params.at(i) -> match(t);
+		}		
+};
+
+
+
+
 class SymbolInfo{
 	string name, type, data_type;
 	SymbolInfo * next;
 	string var_type;
-
+	FunctionInfo func;
+	
 	public:
 		SymbolInfo(){ next = NULL; }
 
@@ -32,11 +80,15 @@ class SymbolInfo{
 		void setNext(SymbolInfo *s) { next = s; }
 		void setDataType(string s) { data_type = s; }
 		void setVarType(string s){ var_type = s; }
+		void setFunctionInfo(FunctionInfo f) { func = f; }
+		bool isDefined() {return func.getIsDefined(); }
+		void setDefinition(bool b) { func.setDefinition(b); }
 
 		string getName(){ return name; }
 		string getType(){ return type; }
 		string getDataType() { return data_type; }
 		string getVarType() { return var_type; }
+		FunctionInfo getFunctionInfo() { return func; }
 		SymbolInfo * getNext(){ return next; }
 		bool matchDataType(string str){ return !data_type.compare(str); }
 
@@ -187,6 +239,43 @@ class ScopeTable
             SymbolInfo * p = new SymbolInfo(key, type);
             p -> setDataType(data_type);
             p -> setVarType(var);	    		
+		
+            if(scope_array[index] == NULL)
+            {
+                scope_array[index] = p;
+            }
+            else
+            {
+                SymbolInfo * curr = scope_array[index];
+                while(true)
+                {
+                    chain_position++;
+                    if(curr -> getNext() == NULL)
+                    {
+                        curr -> setNext(p);
+                        break;
+                    }
+                    curr = curr -> getNext();
+                }
+            }
+            //cout << "Inserted in ScopeTable# " << id << " at position " << index << ", " << chain_position << endl << endl;
+            return true;
+        }
+        
+        bool Insert(string key, string type, string data_type, string var, FunctionInfo f)
+        {
+            SymbolInfo * curr = Lookup(key);
+            if(curr != NULL)
+            {
+                //cout << curr -> getName() << " already exists in current ScopeTable" << endl << endl;
+                return false;
+            }
+            int index = hash_fuc(key);
+            int chain_position = 0;
+            SymbolInfo * p = new SymbolInfo(key, type);
+            p -> setDataType(data_type);
+            p -> setVarType(var);
+            p -> setFunctionInfo(f);	    		
 		
             if(scope_array[index] == NULL)
             {
@@ -373,6 +462,12 @@ class SymbolTable
         {
             return currentScopeTable -> Insert(key, type, data_type, var);
         }
+        
+        bool Insert(string key, string type, string data_type, string var, FunctionInfo f)
+        {
+            return currentScopeTable -> Insert(key, type, data_type, var, f);
+        }
+
 
         bool Remove(string key)
         {
