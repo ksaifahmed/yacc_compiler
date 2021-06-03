@@ -279,7 +279,7 @@ class ScopeTable
                 while(true)
                 {
                     if(curr == NULL) break;
-                    fprintf(lp, "< %s , %s >", curr -> getName().c_str(), curr -> getType().c_str());
+                    fprintf(lp, "< %s , %s > ", curr -> getName().c_str(), curr -> getType().c_str());
                     curr = curr -> getNext();
                 }
                 fprintf(lp, "\n");

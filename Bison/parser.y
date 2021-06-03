@@ -37,15 +37,6 @@ SymbolInfo* assignProduction(string name, string type, string nonterminal, FILE 
 	return new SymbolInfo(name, type);
 }
 
-string getDataType(string str)
-{
-	if(!str.compare("int"))
-		return "CONST_INT";
-	else if(!str.compare("float"))
-		return "CONST_FLOAT";
-	else return "VOID";
-}
-
 void insertParams()
 {
 	while(!params.empty())
@@ -63,17 +54,6 @@ void printError(string msg)
 	error_count++;
 }
 
-bool isNumber(string str)
-{
-    if(str.at(0)==45 && str.size()==1) return false;
-	for(int i=0; i<str.size(); i++)
-	{
-	    char c = str.at(i);
-	    if(c==45 and i==0) continue;
-	    if(c<48 || c>57) return false;
-	}
-	return true;
-}
 %}
 
 
@@ -166,6 +146,7 @@ parameter_list  : parameter_list COMMA type_specifier ID
 		{
 			string type = "parameter_list COMMA type_specifier ID";
 			$$ = assignProduction($1->getName()+","+$3->getName()+" "+$4->getName(), type, "parameter_list", lg);
+			//symbolTable -> Insert($4->getName(), "ID", $3->getType());
 			
 			SymbolInfo * s = new SymbolInfo($4->getName(), "ID");
 			s -> setDataType($3->getType());
@@ -180,7 +161,7 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		| type_specifier ID
 		{
 			$$ = assignProduction($1->getName()+" "+$2->getName(), "type_specifier ID", "parameter_list", lg);
-			symbolTable -> Insert($2->getName(), "ID", $1->getType());
+			//symbolTable -> Insert($2->getName(), "ID", $1->getType());
 			
 			SymbolInfo * s = new SymbolInfo($2->getName(), "ID");
 			s -> setDataType($1->getType());
@@ -296,23 +277,23 @@ statement : var_declaration
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement
 	  {
 	  	string type = "FOR LPAREN expression_statement expression_statement expression RPAREN statement";
-	  	string name = "for("+$3->getName()+$4->getName()+$5->getName()+")"+$7->getName();
+	  	string name = "for ("+$3->getName()+$4->getName()+$5->getName()+")"+$7->getName();
 	 	$$ = assignProduction(name, type, "statement", lg);
 	  }
 	  | IF LPAREN expression RPAREN statement %prec FAKE_ELSE
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement";
-	 	$$ = assignProduction("if("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	 	$$ = assignProduction("if ("+$3->getName()+")"+$5->getName(), type, "statement", lg);
 	  }
 	  | IF LPAREN expression RPAREN statement ELSE statement
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
-	 	$$ = assignProduction("if("+$3->getName()+")"+$5->getName()+"else "+$7->getName(), type, "statement", lg);
+	 	$$ = assignProduction("if ("+$3->getName()+")"+$5->getName()+"else "+$7->getName(), type, "statement", lg);
 	  }
 	  | WHILE LPAREN expression RPAREN statement
 	  {
 	  	string type = "WHILE LPAREN expression RPAREN statement";
-	 	$$ = assignProduction("while("+$3->getName()+")"+$5->getName(), type, "statement", lg);
+	 	$$ = assignProduction("while ("+$3->getName()+")"+$5->getName(), type, "statement", lg);
 	  }	  
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON
 	  {
@@ -363,14 +344,24 @@ variable : ID
 	 	
 	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
 	 	if(sp == NULL) printError("Undeclared variable "+$1->getName());
-	 	if(!isNumber($3->getName())) printError("Expression inside third brackets not an integer");
+	 	if($3->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 }
 	 ;
 	 
 expression : logic_expression	
  	   {
- 	   	$$ = assignProduction($1->getName(), "logic_expression", "expression", lg);
+ 	   	string name = $1->getName();
+ 	   	string type = "logic expression";
+ 	   	$$ = new SymbolInfo(name, type);
+ 	   	
+ 	   	fprintf(lg, "Line %d: expression : %s\n\n", line_count, type.c_str());
+ 	   	if(!$1->getDataType().compare("VOID")) printError("Expression contains type : void");
+ 	   	fprintf(lg, "%s\n\n", name.c_str());
+ 	   	
+ 	   	$$ -> setDataType($1->getDataType());
+ 	   	
+ 	   	
  	   }
 	   | variable ASSIGNOP logic_expression 	
 	   {
@@ -378,15 +369,24 @@ expression : logic_expression
 	   	string name = $1->getName()+"="+$3->getName();
 	   	$$ = new SymbolInfo(name, type);
 	   	
-	   	
+	   	//look-up var in table
 	   	string var_name = "";
 	   	if ($1->getName().find("[") != string::npos) {
         		 var_name = $1->getName().substr(0, $1->getName().find("["));
         	}else var_name = $1->getName();
         	SymbolInfo * sp = symbolTable -> Lookup(var_name);
 	   	
+	   	//print errors
 	   	fprintf(lg, "Line %d: expression : %s\n\n", line_count, type.c_str());
-	   	if(sp!=NULL) if(value_type.compare($1->getDataType())) printError("Type Mismatch");
+	   	if(sp!=NULL)
+	   	{
+	   		string temp = "";
+	   		if(!$3->getDataType().compare("VOID")) temp = ", Void Type in Right Operand";
+	   		if(!sp->getDataType().compare("FLOAT") && !$3->getDataType().compare("INT"));
+	   		else if(sp->getDataType().compare($3->getDataType())) printError("Type Mismatch" + temp);
+	   		
+	   		$$ -> setDataType(sp->getDataType());
+	   	}else $$ -> setDataType("NULL");
 	   	fprintf(lg, "%s\n\n", name.c_str());
 	   }
 	   ;
@@ -394,33 +394,50 @@ expression : logic_expression
 logic_expression : rel_expression 	
 		 {
 		 	$$ = assignProduction($1->getName(), "rel_expression", "logic_expression", lg);
+		 	$$ -> setDataType($1->getDataType());
 		 }
 		 | rel_expression LOGICOP rel_expression 	
 		 {
 		 	string type = "rel_expression LOGICOP rel_expression";
 			$$ = assignProduction($1->getName()+$2->getName()+$3->getName(), type , "logic_expression", lg);
+			
+			if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
+				$$ -> setDataType("VOID");
+			else $$ -> setDataType("INT");
 		 }
 		 ;
 			
 rel_expression	: simple_expression 
 		{
 			$$ = assignProduction($1->getName(), "simple_expression", "rel_expression", lg);
+			$$ -> setDataType($1->getDataType());
 		}
 		| simple_expression RELOP simple_expression	
 		{
 			string type = "simple_expression RELOP simple_expression";
 			$$ = assignProduction($1->getName()+$2->getName()+$3->getName(), type , "rel_expression", lg);
+			
+			if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
+				$$ -> setDataType("VOID");
+			else $$ -> setDataType("INT");
 		}
 		;
 				
 simple_expression : term 
 		  {
 		  	$$ = assignProduction($1->getName(), "term", "simple_expression", lg);
+		  	$$ -> setDataType($1->getDataType());
 		  }
 		  | simple_expression ADDOP term 
 		  {
 		  	string type = "simple_expression ADDOP term";
 		  	$$ = assignProduction($1->getName()+$2->getName()+$3->getName(), type , "simple_expression", lg);
+		  	
+		  	if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
+				$$ -> setDataType("VOID");
+		  	else if(!$1->getDataType().compare("FLOAT") || !$3->getDataType().compare("FLOAT")) 
+				$$ -> setDataType("FLOAT");
+			else $$ -> setDataType("INT");
 		  }
 		  ;
 					
@@ -440,6 +457,13 @@ term :	unary_expression
 	if(!$2->getName().compare("%")){
 		if($1->getDataType().compare("INT") || $3->getDataType().compare("INT")) printError("Non-Integer operand on modulus operator");
 	}
+	
+	if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
+		$$ -> setDataType("VOID");
+	else if(!$1->getDataType().compare("FLOAT") || !$3->getDataType().compare("FLOAT")) 
+		$$ -> setDataType("FLOAT");
+	else $$ -> setDataType("INT");		
+	
 	fprintf(lg, "%s\n\n", name.c_str());
      }
      ;
@@ -447,47 +471,65 @@ term :	unary_expression
 unary_expression : ADDOP unary_expression  
 		 {
 		 	$$ = assignProduction($1->getName()+$2->getName(), "ADDOP unary_expression", "unary_expression", lg);	
+		 	if(!$2->getDataType().compare("FLOAT")) 
+		 	{
+		 		$$ -> setDataType("FLOAT");	
+		 	}else if(!$2->getDataType().compare("VOID")) 
+		 		$$ -> setDataType("VOID");	
+		 	else $$ -> setDataType("INT");	
 		 }
 		 | NOT unary_expression 
 		 {
-		 	$$ = assignProduction("!"+$2->getName(), "NOT unary_expression", "unary_expression", lg);	
+		 	$$ = assignProduction("!"+$2->getName(), "NOT unary_expression", "unary_expression", lg);
+		 	if(!$2->getDataType().compare("VOID"))
+		 		 $$ -> setDataType("VOID");
+		 	else $$ -> setDataType("INT");		
 		 }		 
 		 | factor 
 		 {
 		 	$$ = assignProduction($1->getName(), "factor", "unary_expression", lg);
-		 	$$ -> setDataType(data_type);	
+			$$ -> setDataType($1->getDataType());				
 		 }
 		 ;
 	
 factor	: variable 
 	{
-		$$ = assignProduction($1->getName(), "variable", "factor", lg);		
+		$$ = assignProduction($1->getName(), "variable", "factor", lg);
+		$$ -> setDataType($1->getDataType());		
 	}
 	| ID LPAREN argument_list RPAREN
 	{
-		$$ = assignProduction($1->getName()+"("+$3->getName()+")", "ID LPAREN argument_list RPAREN", "factor", lg);		
+		$$ = assignProduction($1->getName()+"("+$3->getName()+")", "ID LPAREN argument_list RPAREN", "factor", lg);
+		SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+		if(sp != NULL) $$ -> setDataType(sp->getDataType());
+		else $$ -> setDataType("NULL");		
 	}	
 	| LPAREN expression RPAREN
 	{
-		$$ = assignProduction("("+$2->getName()+")", "LPAREN expression RPAREN", "factor", lg);		
+		$$ = assignProduction("("+$2->getName()+")", "LPAREN expression RPAREN", "factor", lg);
+		$$ -> setDataType($2->getDataType());			
 	}	
 	| CONST_INT 
 	{
 		$$ = assignProduction($1->getName(), "CONST_INT", "factor", lg);	
 		value_type = "INT";	
+		$$ -> setDataType("INT");	
 	}	
 	| CONST_FLOAT
 	{
 		$$ = assignProduction($1->getName(), "CONST_FLOAT", "factor", lg);
 		value_type = "FLOAT";
+		$$ -> setDataType("FLOAT");	
 	}	
 	| variable INCOP 
 	{
 		$$ = assignProduction($1->getName()+"++", "variable INCOP", "factor", lg);
+		$$ -> setDataType($1->getDataType());	
 	}	
 	| variable DECOP
 	{
 		$$ = assignProduction($1->getName()+"--", "variable DECOP", "factor", lg);
+		$$ -> setDataType($1->getDataType());
 	}
 	;
 	
