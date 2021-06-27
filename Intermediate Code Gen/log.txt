@@ -1,0 +1,625 @@
+Line 1: type_specifier : INT
+
+int
+
+Line 2: type_specifier : INT
+
+int
+
+Line 2: declaration_list : ID
+
+a
+
+Line 2: declaration_list : declaration_list COMMA ID
+
+a,b
+
+Line 2: declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD
+
+a,b,c[3]
+
+Line 2: var_declaration : type_specifier declaration_list SEMICOLON
+
+int a,b,c[3];
+
+Line 2: statement : var_declaration
+
+int a,b,c[3];
+
+Line 2: statements : statement
+
+int a,b,c[3];
+
+
+Line 6: variable : ID
+
+a
+
+Line 6: factor : CONST_INT
+
+1
+
+Line 6: unary_expression : factor
+
+1
+
+Line 6: term : unary_expression
+
+1
+
+Line 6: factor : CONST_INT
+
+2
+
+Line 6: unary_expression : factor
+
+2
+
+Line 6: term : unary_expression
+
+2
+
+Line 6: simple_expression : term
+
+2
+
+Line 6: factor : CONST_INT
+
+3
+
+Line 6: unary_expression : factor
+
+3
+
+Line 6: term : unary_expression
+
+3
+
+Line 6: simple_expression : simple_expression ADDOP term
+
+2+3
+
+Line 6: rel_expression : simple_expression
+
+2+3
+
+Line 6: logic_expression : rel_expression
+
+2+3
+
+Line 6: expression : logic expression
+
+2+3
+
+Line 6: factor : LPAREN expression RPAREN
+
+(2+3)
+
+Line 6: unary_expression : factor
+
+(2+3)
+
+Line 6: term : term MULOP unary_expression
+
+1*(2+3)
+
+Line 6: factor : CONST_INT
+
+3
+
+Line 6: unary_expression : factor
+
+3
+
+Line 6: term : term MULOP unary_expression
+
+1*(2+3)%3
+
+Line 6: simple_expression : term
+
+1*(2+3)%3
+
+Line 6: rel_expression : simple_expression
+
+1*(2+3)%3
+
+Line 6: logic_expression : rel_expression
+
+1*(2+3)%3
+
+Line 6: expression : variable ASSIGNOP logic_expression
+
+a=1*(2+3)%3
+
+Line 6: expression_statement : expression SEMICOLON
+
+a=1*(2+3)%3;
+
+Line 6: statement : expression_statement
+
+a=1*(2+3)%3;
+
+Line 6: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+
+
+Line 7: variable : ID
+
+b
+
+Line 7: factor : CONST_INT
+
+1
+
+Line 7: unary_expression : factor
+
+1
+
+Line 7: term : unary_expression
+
+1
+
+Line 7: simple_expression : term
+
+1
+
+Line 7: factor : CONST_INT
+
+5
+
+Line 7: unary_expression : factor
+
+5
+
+Line 7: term : unary_expression
+
+5
+
+Line 7: simple_expression : term
+
+5
+
+Line 7: rel_expression : simple_expression RELOP simple_expression
+
+1<5
+
+Line 7: logic_expression : rel_expression
+
+1<5
+
+Line 7: expression : variable ASSIGNOP logic_expression
+
+b=1<5
+
+Line 7: expression_statement : expression SEMICOLON
+
+b=1<5;
+
+Line 7: statement : expression_statement
+
+b=1<5;
+
+Line 7: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+
+
+Line 8: factor : CONST_INT
+
+0
+
+Line 8: unary_expression : factor
+
+0
+
+Line 8: term : unary_expression
+
+0
+
+Line 8: simple_expression : term
+
+0
+
+Line 8: rel_expression : simple_expression
+
+0
+
+Line 8: logic_expression : rel_expression
+
+0
+
+Line 8: expression : logic expression
+
+0
+
+Line 8: variable : ID LTHIRD expression RTHIRD
+
+c[0]
+
+Line 8: factor : CONST_INT
+
+2
+
+Line 8: unary_expression : factor
+
+2
+
+Line 8: term : unary_expression
+
+2
+
+Line 8: simple_expression : term
+
+2
+
+Line 8: rel_expression : simple_expression
+
+2
+
+Line 8: logic_expression : rel_expression
+
+2
+
+Line 8: expression : variable ASSIGNOP logic_expression
+
+c[0]=2
+
+Line 8: expression_statement : expression SEMICOLON
+
+c[0]=2;
+
+Line 8: statement : expression_statement
+
+c[0]=2;
+
+Line 8: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+
+
+Line 9: variable : ID
+
+a
+
+Line 9: factor : variable
+
+a
+
+Line 9: unary_expression : factor
+
+a
+
+Line 9: term : unary_expression
+
+a
+
+Line 9: simple_expression : term
+
+a
+
+Line 9: rel_expression : simple_expression
+
+a
+
+Line 9: variable : ID
+
+b
+
+Line 9: factor : variable
+
+b
+
+Line 9: unary_expression : factor
+
+b
+
+Line 9: term : unary_expression
+
+b
+
+Line 9: simple_expression : term
+
+b
+
+Line 9: rel_expression : simple_expression
+
+b
+
+Line 9: logic_expression : rel_expression LOGICOP rel_expression
+
+a&&b
+
+Line 9: expression : logic expression
+
+a&&b
+
+Line 10: factor : CONST_INT
+
+0
+
+Line 10: unary_expression : factor
+
+0
+
+Line 10: term : unary_expression
+
+0
+
+Line 10: simple_expression : term
+
+0
+
+Line 10: rel_expression : simple_expression
+
+0
+
+Line 10: logic_expression : rel_expression
+
+0
+
+Line 10: expression : logic expression
+
+0
+
+Line 10: variable : ID LTHIRD expression RTHIRD
+
+c[0]
+
+Line 10: factor : variable INCOP
+
+c[0]++
+
+Line 10: unary_expression : factor
+
+c[0]++
+
+Line 10: term : unary_expression
+
+c[0]++
+
+Line 10: simple_expression : term
+
+c[0]++
+
+Line 10: rel_expression : simple_expression
+
+c[0]++
+
+Line 10: logic_expression : rel_expression
+
+c[0]++
+
+Line 10: expression : logic expression
+
+c[0]++
+
+Line 10: expression_statement : expression SEMICOLON
+
+c[0]++;
+
+Line 10: statement : expression_statement
+
+c[0]++;
+
+Line 12: factor : CONST_INT
+
+1
+
+Line 12: unary_expression : factor
+
+1
+
+Line 12: term : unary_expression
+
+1
+
+Line 12: simple_expression : term
+
+1
+
+Line 12: rel_expression : simple_expression
+
+1
+
+Line 12: logic_expression : rel_expression
+
+1
+
+Line 12: expression : logic expression
+
+1
+
+Line 12: variable : ID LTHIRD expression RTHIRD
+
+c[1]
+
+Line 12: factor : CONST_INT
+
+0
+
+Line 12: unary_expression : factor
+
+0
+
+Line 12: term : unary_expression
+
+0
+
+Line 12: simple_expression : term
+
+0
+
+Line 12: rel_expression : simple_expression
+
+0
+
+Line 12: logic_expression : rel_expression
+
+0
+
+Line 12: expression : logic expression
+
+0
+
+Line 12: variable : ID LTHIRD expression RTHIRD
+
+c[0]
+
+Line 12: factor : variable
+
+c[0]
+
+Line 12: unary_expression : factor
+
+c[0]
+
+Line 12: term : unary_expression
+
+c[0]
+
+Line 12: simple_expression : term
+
+c[0]
+
+Line 12: rel_expression : simple_expression
+
+c[0]
+
+Line 12: logic_expression : rel_expression
+
+c[0]
+
+Line 12: expression : variable ASSIGNOP logic_expression
+
+c[1]=c[0]
+
+Line 12: expression_statement : expression SEMICOLON
+
+c[1]=c[0];
+
+Line 12: statement : expression_statement
+
+c[1]=c[0];
+
+Line 12: statement : IF LPAREN expression RPAREN statement ELSE statement
+
+if (a&&b) c[0]++;else c[1]=c[0];
+
+Line 12: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+
+
+Line 13: variable : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+printf(a);
+
+Line 13: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+
+
+Line 14: variable : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+printf(b);
+
+Line 14: statements : statements statement
+
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+printf(b);
+
+
+Line 15: compound_statement : LCURL statements RCURL
+
+{
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+printf(b);
+}
+
+
+
+ScopeTable # 1.1
+ 7 --> < a , ID > 
+ 8 --> < b , ID > 
+ 9 --> < c , ID > 
+
+
+ScopeTable # 1
+ 1 --> < main , ID > 
+
+Line 15: func_definition : type_specifier ID LPAREN RPAREN compound_statement
+
+int main(){
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+printf(b);
+}
+
+
+Line 15: unit : func_definition
+
+int main(){
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+printf(b);
+}
+
+
+Line 15: program : unit
+
+int main(){
+int a,b,c[3];
+a=1*(2+3)%3;
+b=1<5;
+c[0]=2;
+if (a&&b) c[0]++;else c[1]=c[0];
+printf(a);
+printf(b);
+}
+
+
+
+Line 16: start : program
+
+
+ScopeTable # 1
+ 1 --> < main , ID > 
+
+
+Total lines: 16
+Total errors: 0
+
