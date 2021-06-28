@@ -619,11 +619,11 @@ static const yytype_uint16 yyrline[] =
        0,   136,   136,   155,   160,   167,   172,   177,   185,   184,
      211,   210,   237,   236,   289,   288,   328,   344,   349,   358,
      365,   365,   372,   372,   381,   396,   400,   404,   410,   423,
-     439,   451,   467,   472,   479,   484,   489,   494,   500,   505,
-     510,   515,   529,   536,   540,   548,   568,   590,   607,   651,
-     659,   716,   724,   767,   775,   799,   807,   855,   879,   895,
-     904,   911,   953,   960,   968,   974,   983,   993,   998,  1003,
-    1009
+     439,   451,   467,   473,   480,   485,   491,   496,   502,   507,
+     512,   517,   531,   538,   542,   550,   570,   592,   609,   653,
+     661,   718,   727,   770,   778,   803,   811,   860,   884,   900,
+     909,   916,   958,   966,   974,   980,   989,   999,  1004,  1009,
+    1015
 };
 #endif
 
@@ -1509,7 +1509,7 @@ yyreduce:
 #line 156 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName()+"\n", "program unit", "program", lg);
-	     	(yyval.si)->code += (yyvsp[0].si)->code;
+	     	(yyval.si)->code += (yyvsp[-1].si)->code + (yyvsp[0].si)->code;
 	}
 #line 1515 "y.tab.c" /* yacc.c:1646  */
     break;
@@ -1921,85 +1921,87 @@ yyreduce:
     {
 	   	(yyval.si) = assignProduction((yyvsp[0].si)->getName()+"\n", "statement", "statements", lg);
 	   	(yyval.si)->code += (yyvsp[0].si)->code;
+	   	
 	   }
-#line 1926 "y.tab.c" /* yacc.c:1646  */
+#line 1927 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 473 "parser.y" /* yacc.c:1646  */
+#line 474 "parser.y" /* yacc.c:1646  */
     {
 	   	(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName()+"\n", "statements statement", "statements", lg);
-	    	(yyval.si)->code += (yyvsp[0].si)->code;
+	    	(yyval.si)->code += (yyvsp[-1].si)->code+(yyvsp[0].si)->code;
 	   }
-#line 1935 "y.tab.c" /* yacc.c:1646  */
+#line 1936 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 480 "parser.y" /* yacc.c:1646  */
+#line 481 "parser.y" /* yacc.c:1646  */
     {
 	 	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "var_declaration", "statement", lg);
 	 	(yyval.si)->code = "";
 	  }
-#line 1944 "y.tab.c" /* yacc.c:1646  */
+#line 1945 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 485 "parser.y" /* yacc.c:1646  */
+#line 486 "parser.y" /* yacc.c:1646  */
     {
 	 	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "expression_statement", "statement", lg);
 	 	(yyval.si)->code += (yyvsp[0].si)->code;
+	 	//cout << $$->code;
 	  }
-#line 1953 "y.tab.c" /* yacc.c:1646  */
+#line 1955 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 490 "parser.y" /* yacc.c:1646  */
+#line 492 "parser.y" /* yacc.c:1646  */
     {
 	 	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "compound_statement", "statement", lg);
 	 	(yyval.si)->code += (yyvsp[0].si)->code;
 	  }
-#line 1962 "y.tab.c" /* yacc.c:1646  */
+#line 1964 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 495 "parser.y" /* yacc.c:1646  */
+#line 497 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "FOR LPAREN expression_statement expression_statement expression RPAREN statement";
 	  	string name = "for ("+(yyvsp[-4].si)->getName()+(yyvsp[-3].si)->getName()+(yyvsp[-2].si)->getName()+") "+(yyvsp[0].si)->getName();
 	 	(yyval.si) = assignProduction(name, type, "statement", lg);
 	  }
-#line 1972 "y.tab.c" /* yacc.c:1646  */
+#line 1974 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 501 "parser.y" /* yacc.c:1646  */
+#line 503 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "IF LPAREN expression RPAREN statement";
 	 	(yyval.si) = assignProduction("if ("+(yyvsp[-2].si)->getName()+") "+(yyvsp[0].si)->getName(), type, "statement", lg);
 	  }
-#line 1981 "y.tab.c" /* yacc.c:1646  */
+#line 1983 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 506 "parser.y" /* yacc.c:1646  */
+#line 508 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
 	 	(yyval.si) = assignProduction("if ("+(yyvsp[-4].si)->getName()+") "+(yyvsp[-2].si)->getName()+"else "+(yyvsp[0].si)->getName(), type, "statement", lg);
 	  }
-#line 1990 "y.tab.c" /* yacc.c:1646  */
+#line 1992 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 511 "parser.y" /* yacc.c:1646  */
+#line 513 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "WHILE LPAREN expression RPAREN statement";
 	 	(yyval.si) = assignProduction("while ("+(yyvsp[-2].si)->getName()+") "+(yyvsp[0].si)->getName(), type, "statement", lg);
 	  }
-#line 1999 "y.tab.c" /* yacc.c:1646  */
+#line 2001 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 516 "parser.y" /* yacc.c:1646  */
+#line 518 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "PRINTLN LPAREN ID RPAREN SEMICOLON";
 	  	string name = "printf("+(yyvsp[-2].si)->getName()+");";
@@ -2013,38 +2015,38 @@ yyreduce:
 	 	}
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	  }
-#line 2017 "y.tab.c" /* yacc.c:1646  */
+#line 2019 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 530 "parser.y" /* yacc.c:1646  */
+#line 532 "parser.y" /* yacc.c:1646  */
     {
 	  	string type = "RETURN expression SEMICOLON";
 	 	(yyval.si) = assignProduction("return "+(yyvsp[-1].si)->getName()+";", type, "statement", lg);
 	  }
-#line 2026 "y.tab.c" /* yacc.c:1646  */
+#line 2028 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 537 "parser.y" /* yacc.c:1646  */
+#line 539 "parser.y" /* yacc.c:1646  */
     {
 				(yyval.si) = assignProduction(";", "SEMICOLON", "expression_statement", lg);
 			}
-#line 2034 "y.tab.c" /* yacc.c:1646  */
+#line 2036 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 541 "parser.y" /* yacc.c:1646  */
+#line 543 "parser.y" /* yacc.c:1646  */
     {
 				(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+";", "expression SEMICOLON", "expression_statement", lg);
 				(yyval.si) -> code += (yyvsp[-1].si)->code;
 				
 			}
-#line 2044 "y.tab.c" /* yacc.c:1646  */
+#line 2046 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 549 "parser.y" /* yacc.c:1646  */
+#line 551 "parser.y" /* yacc.c:1646  */
     {
  	 	SymbolInfo * sp = symbolTable -> Lookup((yyvsp[0].si)->getName());
 	 	
@@ -2060,15 +2062,15 @@ yyreduce:
 	 	else printError("Undeclared variable "+(yyvsp[0].si)->getName());
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	(yyval.si)->symbol = (yyvsp[0].si)->symbol+symbolTable->getID();
+	 	(yyval.si)->symbol = (yyvsp[0].si)->getName()+symbolTable->getID();
 	 	(yyval.si)->setVarType("notarray");
 	 	
 	 }
-#line 2068 "y.tab.c" /* yacc.c:1646  */
+#line 2070 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 569 "parser.y" /* yacc.c:1646  */
+#line 571 "parser.y" /* yacc.c:1646  */
     {
 	 	string type = "ID LTHIRD expression RTHIRD";
 	 	string name = (yyvsp[-3].si)->getName()+"["+(yyvsp[-1].si)->getName()+"]";
@@ -2084,15 +2086,15 @@ yyreduce:
 	 	if((yyvsp[-1].si)->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	(yyval.si)->symbol = (yyvsp[-3].si)->symbol+symbolTable->getID()+"["+(yyvsp[-1].si)->getName()+"]";
+	 	(yyval.si)->symbol = (yyvsp[-3].si)->getName()+symbolTable->getID()+"["+(yyvsp[-1].si)->getName()+"]";
 	 	(yyval.si)->code=(yyvsp[-1].si)->code+"mov bx, " +(yyvsp[-1].si)->symbol +"\nadd bx, bx\n";
 	  	(yyval.si)->setVarType("array");
 	 }
-#line 2092 "y.tab.c" /* yacc.c:1646  */
+#line 2094 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 591 "parser.y" /* yacc.c:1646  */
+#line 593 "parser.y" /* yacc.c:1646  */
     {
  	   	string name = (yyvsp[0].si)->getName();
  	   	string type = "logic expression";
@@ -2109,11 +2111,11 @@ yyreduce:
  	   	
  	   	
  	   }
-#line 2113 "y.tab.c" /* yacc.c:1646  */
+#line 2115 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 608 "parser.y" /* yacc.c:1646  */
+#line 610 "parser.y" /* yacc.c:1646  */
     {
 	   	string type = "variable ASSIGNOP logic_expression";
 	   	string name = (yyvsp[-2].si)->getName()+"="+(yyvsp[0].si)->getName();
@@ -2155,11 +2157,11 @@ yyreduce:
 		}
 	   	
 	   }
-#line 2159 "y.tab.c" /* yacc.c:1646  */
+#line 2161 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 652 "parser.y" /* yacc.c:1646  */
+#line 654 "parser.y" /* yacc.c:1646  */
     {
 		 	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "rel_expression", "logic_expression", lg);
 		 	(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());
@@ -2167,11 +2169,11 @@ yyreduce:
 		  	(yyval.si) -> code += (yyvsp[0].si) -> code;
 		  	(yyval.si) -> symbol = (yyvsp[0].si) -> symbol;			 	
 		 }
-#line 2171 "y.tab.c" /* yacc.c:1646  */
+#line 2173 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 660 "parser.y" /* yacc.c:1646  */
+#line 662 "parser.y" /* yacc.c:1646  */
     {
 		 	string type = "rel_expression LOGICOP rel_expression";
 			(yyval.si) = assignProduction((yyvsp[-2].si)->getName()+(yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName(), type , "logic_expression", lg);
@@ -2180,7 +2182,7 @@ yyreduce:
 				(yyval.si) -> setDataType("VOID");
 			else (yyval.si) -> setDataType("INT");
 			
-			(yyval.si)->code += (yyvsp[0].si)->code;
+			(yyval.si)->code += (yyvsp[-2].si)->code+(yyvsp[0].si)->code;
 			char * temp = newTemp();
 			(yyval.si)->symbol = string(temp);
 			
@@ -2226,23 +2228,24 @@ yyreduce:
 				(yyval.si)->code += string(label2) + ":\n";				
 			}
 		 }
-#line 2230 "y.tab.c" /* yacc.c:1646  */
+#line 2232 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 717 "parser.y" /* yacc.c:1646  */
+#line 719 "parser.y" /* yacc.c:1646  */
     {
 			(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "simple_expression", "rel_expression", lg);
 			(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());
 		  	
 		  	(yyval.si) -> code += (yyvsp[0].si) -> code;
-		  	(yyval.si) -> symbol = (yyvsp[0].si) -> symbol;			
+		  	(yyval.si) -> symbol = (yyvsp[0].si) -> symbol;	
+		  	//cout << $1->code;		
 		}
-#line 2242 "y.tab.c" /* yacc.c:1646  */
+#line 2245 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 725 "parser.y" /* yacc.c:1646  */
+#line 728 "parser.y" /* yacc.c:1646  */
     {
 			string type = "simple_expression RELOP simple_expression";
 			(yyval.si) = assignProduction((yyvsp[-2].si)->getName()+(yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName(), type , "rel_expression", lg);
@@ -2251,7 +2254,7 @@ yyreduce:
 				(yyval.si) -> setDataType("VOID");
 			else (yyval.si) -> setDataType("INT");
 	
-			(yyval.si)->code+=(yyvsp[0].si)->code;
+			(yyval.si)->code += (yyvsp[-2].si)->code+(yyvsp[0].si)->code;
 			(yyval.si)->code+="mov ax, " + (yyvsp[-2].si)->symbol+"\n";
 			(yyval.si)->code+="cmp ax, " + (yyvsp[0].si)->symbol+"\n";
 			char *temp=newTemp();
@@ -2283,11 +2286,11 @@ yyreduce:
 			(yyval.si)->code+=string(label2)+":\n";
 			(yyval.si)->symbol = string(temp);			
 		}
-#line 2287 "y.tab.c" /* yacc.c:1646  */
+#line 2290 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 768 "parser.y" /* yacc.c:1646  */
+#line 771 "parser.y" /* yacc.c:1646  */
     {
 		  	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "term", "simple_expression", lg);
 		  	(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());
@@ -2295,11 +2298,11 @@ yyreduce:
 		  	(yyval.si) -> code += (yyvsp[0].si) -> code;
 		  	(yyval.si) -> symbol = (yyvsp[0].si) -> symbol;
 		  }
-#line 2299 "y.tab.c" /* yacc.c:1646  */
+#line 2302 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 776 "parser.y" /* yacc.c:1646  */
+#line 779 "parser.y" /* yacc.c:1646  */
     {
 		  	string type = "simple_expression ADDOP term";
 		  	(yyval.si) = assignProduction((yyvsp[-2].si)->getName()+(yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName(), type , "simple_expression", lg);
@@ -2310,7 +2313,7 @@ yyreduce:
 				(yyval.si) -> setDataType("FLOAT");
 			else (yyval.si) -> setDataType("INT");
 			
-			(yyval.si)->code += (yyvsp[0].si)->code;
+			(yyval.si)->code += (yyvsp[-2].si)->code+(yyvsp[0].si)->code;
 			(yyval.si)->code += "mov ax, " + (yyvsp[-2].si)->symbol + "\n";
 			if(!(yyvsp[-1].si)->getName().compare("+"))
 				(yyval.si)->code += "add ax, " + (yyvsp[0].si)->symbol+ "\n";
@@ -2320,12 +2323,13 @@ yyreduce:
 			(yyval.si) ->code += "mov " + string(temp)+", ax\n";
 			
 			(yyval.si) -> symbol = string(temp);
+			//cout << $$->code;
 		  }
-#line 2325 "y.tab.c" /* yacc.c:1646  */
+#line 2329 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 800 "parser.y" /* yacc.c:1646  */
+#line 804 "parser.y" /* yacc.c:1646  */
     {
      	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "unary_expression", "term", lg);
      	(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());
@@ -2333,11 +2337,11 @@ yyreduce:
      	(yyval.si)-> code +=  (yyvsp[0].si)->code;
      	(yyval.si)->symbol = (yyvsp[0].si)->symbol;
      }
-#line 2337 "y.tab.c" /* yacc.c:1646  */
+#line 2341 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 808 "parser.y" /* yacc.c:1646  */
+#line 812 "parser.y" /* yacc.c:1646  */
     {
      	string name = (yyvsp[-2].si)->getName()+(yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName();
      	string type = "term MULOP unary_expression";
@@ -2361,7 +2365,7 @@ yyreduce:
 	
 	fprintf(lg, "%s\n\n", name.c_str());
 	
-	(yyval.si)->code += (yyvsp[0].si)->code;
+	(yyval.si)->code += (yyvsp[-2].si)->code+(yyvsp[0].si)->code;
 	(yyval.si)->code += "mov ax, "+ (yyvsp[-2].si)->symbol+"\n";
 	(yyval.si)->code += "mov bx, "+ (yyvsp[0].si)->symbol+"\n";
 	char *temp=newTemp();
@@ -2382,12 +2386,13 @@ yyreduce:
 		(yyval.si)->code += "mov "+ string(temp) + ", dx\n";		
 	}
 	(yyval.si)->symbol = string(temp);
+	//cout << $$->code ;
      }
-#line 2387 "y.tab.c" /* yacc.c:1646  */
+#line 2392 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 856 "parser.y" /* yacc.c:1646  */
+#line 861 "parser.y" /* yacc.c:1646  */
     {
 		 	(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+(yyvsp[0].si)->getName(), "ADDOP unary_expression", "unary_expression", lg);	
 		 	if(!(yyvsp[0].si)->getDataType().compare("FLOAT")) 
@@ -2411,11 +2416,11 @@ yyreduce:
 			}
 			
 		 }
-#line 2415 "y.tab.c" /* yacc.c:1646  */
+#line 2420 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 880 "parser.y" /* yacc.c:1646  */
+#line 885 "parser.y" /* yacc.c:1646  */
     {
 		 	(yyval.si) = assignProduction("!"+(yyvsp[0].si)->getName(), "NOT unary_expression", "unary_expression", lg);
 		 	if(!(yyvsp[0].si)->getDataType().compare("VOID"))
@@ -2431,33 +2436,33 @@ yyreduce:
 			(yyval.si)->symbol = string(temp); 	
 		 		
 		 }
-#line 2435 "y.tab.c" /* yacc.c:1646  */
+#line 2440 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 896 "parser.y" /* yacc.c:1646  */
+#line 901 "parser.y" /* yacc.c:1646  */
     {
 		 	(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "factor", "unary_expression", lg);
 			(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());	
 			(yyval.si) -> code += (yyvsp[0].si)->code;
 			(yyval.si) -> symbol = (yyvsp[0].si) -> symbol;			
 		 }
-#line 2446 "y.tab.c" /* yacc.c:1646  */
+#line 2451 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 905 "parser.y" /* yacc.c:1646  */
+#line 910 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "variable", "factor", lg);
 		(yyval.si) -> setDataType((yyvsp[0].si)->getDataType());	
 		(yyval.si)->symbol = (yyvsp[0].si)->symbol;	
 		(yyval.si)->code = "";
 	}
-#line 2457 "y.tab.c" /* yacc.c:1646  */
+#line 2462 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 912 "parser.y" /* yacc.c:1646  */
+#line 917 "parser.y" /* yacc.c:1646  */
     {
 		string name = (yyvsp[-3].si)->getName()+"("+(yyvsp[-1].si)->getName()+")";
 		string type = "ID LPAREN argument_list RPAREN";
@@ -2499,22 +2504,23 @@ yyreduce:
 		fprintf(lg, "%s\n\n", name.c_str());
 					
 	}
-#line 2503 "y.tab.c" /* yacc.c:1646  */
+#line 2508 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 954 "parser.y" /* yacc.c:1646  */
+#line 959 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction("("+(yyvsp[-1].si)->getName()+")", "LPAREN expression RPAREN", "factor", lg);
 		(yyval.si) -> setDataType((yyvsp[-1].si)->getDataType());
 		(yyval.si)->symbol = (yyvsp[-1].si)->symbol;	
-		(yyval.si)->code += (yyvsp[-1].si)->code;		
+		(yyval.si)->code += (yyvsp[-1].si)->code;	
+		//cout << $2->code;	
 	}
-#line 2514 "y.tab.c" /* yacc.c:1646  */
+#line 2520 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 961 "parser.y" /* yacc.c:1646  */
+#line 967 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "CONST_INT", "factor", lg);	
 		value_type = "INT";	
@@ -2522,21 +2528,21 @@ yyreduce:
 		(yyval.si)->symbol = (yyvsp[0].si)->getName();
 		(yyval.si)->code = "";
 	}
-#line 2526 "y.tab.c" /* yacc.c:1646  */
+#line 2532 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 969 "parser.y" /* yacc.c:1646  */
+#line 975 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "CONST_FLOAT", "factor", lg);
 		value_type = "FLOAT";
 		(yyval.si) -> setDataType("FLOAT");	
 	}
-#line 2536 "y.tab.c" /* yacc.c:1646  */
+#line 2542 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 975 "parser.y" /* yacc.c:1646  */
+#line 981 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+"++", "variable INCOP", "factor", lg);
 		(yyval.si) -> setDataType((yyvsp[-1].si)->getDataType());	
@@ -2545,11 +2551,11 @@ yyreduce:
 		(yyval.si)->symbol = (yyvsp[-1].si)->symbol;
 		
 	}
-#line 2549 "y.tab.c" /* yacc.c:1646  */
+#line 2555 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 984 "parser.y" /* yacc.c:1646  */
+#line 990 "parser.y" /* yacc.c:1646  */
     {
 		(yyval.si) = assignProduction((yyvsp[-1].si)->getName()+"--", "variable DECOP", "factor", lg);
 		(yyval.si) -> setDataType((yyvsp[-1].si)->getDataType());
@@ -2557,46 +2563,46 @@ yyreduce:
 		(yyval.si)->code += "mov ax, "+(yyvsp[-1].si)->symbol+"\nsub ax, 1\nmov "+(yyvsp[-1].si)->symbol+", ax\n";
 		(yyval.si)->symbol = (yyvsp[-1].si)->symbol;
 	}
-#line 2561 "y.tab.c" /* yacc.c:1646  */
+#line 2567 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 994 "parser.y" /* yacc.c:1646  */
+#line 1000 "parser.y" /* yacc.c:1646  */
     {
 			(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "arguments", "argument_list", lg);
 		}
-#line 2569 "y.tab.c" /* yacc.c:1646  */
+#line 2575 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 998 "parser.y" /* yacc.c:1646  */
+#line 1004 "parser.y" /* yacc.c:1646  */
     {
 			(yyval.si) = assignProduction("", "", "argument_list", lg);
 		}
-#line 2577 "y.tab.c" /* yacc.c:1646  */
+#line 2583 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 1004 "parser.y" /* yacc.c:1646  */
+#line 1010 "parser.y" /* yacc.c:1646  */
     {
 			(yyval.si) = assignProduction((yyvsp[-2].si)->getName()+","+(yyvsp[0].si)->getName(), "arguments COMMA logic_expression", "arguments", lg);
 			args.push_back((yyvsp[0].si)->getDataType());
 			
 		}
-#line 2587 "y.tab.c" /* yacc.c:1646  */
+#line 2593 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 1010 "parser.y" /* yacc.c:1646  */
+#line 1016 "parser.y" /* yacc.c:1646  */
     {
 	      		(yyval.si) = assignProduction((yyvsp[0].si)->getName(), "logic_expression", "arguments", lg);
 			args.push_back((yyvsp[0].si)->getDataType());
 	      }
-#line 2596 "y.tab.c" /* yacc.c:1646  */
+#line 2602 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2600 "y.tab.c" /* yacc.c:1646  */
+#line 2606 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2824,7 +2830,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1017 "parser.y" /* yacc.c:1906  */
+#line 1023 "parser.y" /* yacc.c:1906  */
 
 int main(int argc,char *argv[])
 {

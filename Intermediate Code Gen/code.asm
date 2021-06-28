@@ -39,6 +39,34 @@ print endp
 main proc
 mov ax,@data
 mov ds,ax
+mov ax, 2
+add ax, 3
+mov t0, ax
+mov ax, 1
+mov bx, t0
+mul bx
+mov t1, ax
+mov ax, t1
+mov bx, 3
+xor dx, dx
+div bx
+mov t2, dx
+mov ax, t2
+mov a1.1, ax
+mov ax, 1
+cmp ax, 5
+jl L0
+mov t3, 0
+jmp L1
+L0:
+mov t3, 1
+L1:
+mov ax, t3
+mov b1.1, ax
+mov bx, 0
+add bx, bx
+mov ax, 2
+mov  c1.1[0][bx], ax
 exit:
 mov ah,4ch
 int 21h

@@ -155,7 +155,7 @@ start : program
 program : program unit 
 	{
 		$$ = assignProduction($1->getName()+$2->getName()+"\n", "program unit", "program", lg);
-	     	$$->code += $2->code;
+	     	$$->code += $1->code + $2->code;
 	}
 	| unit
 	{
@@ -468,11 +468,12 @@ statements : statement
 	   {
 	   	$$ = assignProduction($1->getName()+"\n", "statement", "statements", lg);
 	   	$$->code += $1->code;
+	   	
 	   }
 	   | statements statement
 	   {
 	   	$$ = assignProduction($1->getName()+$2->getName()+"\n", "statements statement", "statements", lg);
-	    	$$->code += $2->code;
+	    	$$->code += $1->code+$2->code;
 	   }
 	   ;
 	   
@@ -485,6 +486,7 @@ statement : var_declaration
 	  {
 	 	$$ = assignProduction($1->getName(), "expression_statement", "statement", lg);
 	 	$$->code += $1->code;
+	 	//cout << $$->code;
 	  }
 	  | compound_statement
 	  {
@@ -561,7 +563,7 @@ variable : ID
 	 	else printError("Undeclared variable "+$1->getName());
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->symbol+symbolTable->getID();
+	 	$$->symbol = $1->getName()+symbolTable->getID();
 	 	$$->setVarType("notarray");
 	 	
 	 } 		
@@ -581,7 +583,7 @@ variable : ID
 	 	if($3->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->symbol+symbolTable->getID()+"["+$3->getName()+"]";
+	 	$$->symbol = $1->getName()+symbolTable->getID()+"["+$3->getName()+"]";
 	 	$$->code=$3->code+"mov bx, " +$3->symbol +"\nadd bx, bx\n";
 	  	$$->setVarType("array");
 	 }
@@ -665,7 +667,7 @@ logic_expression : rel_expression
 				$$ -> setDataType("VOID");
 			else $$ -> setDataType("INT");
 			
-			$$->code += $3->code;
+			$$->code += $1->code+$3->code;
 			char * temp = newTemp();
 			$$->symbol = string(temp);
 			
@@ -719,7 +721,8 @@ rel_expression	: simple_expression
 			$$ -> setDataType($1->getDataType());
 		  	
 		  	$$ -> code += $1 -> code;
-		  	$$ -> symbol = $1 -> symbol;			
+		  	$$ -> symbol = $1 -> symbol;	
+		  	//cout << $1->code;		
 		}
 		| simple_expression RELOP simple_expression	
 		{
@@ -730,7 +733,7 @@ rel_expression	: simple_expression
 				$$ -> setDataType("VOID");
 			else $$ -> setDataType("INT");
 	
-			$$->code+=$3->code;
+			$$->code += $1->code+$3->code;
 			$$->code+="mov ax, " + $1->symbol+"\n";
 			$$->code+="cmp ax, " + $3->symbol+"\n";
 			char *temp=newTemp();
@@ -783,7 +786,7 @@ simple_expression : term
 				$$ -> setDataType("FLOAT");
 			else $$ -> setDataType("INT");
 			
-			$$->code += $3->code;
+			$$->code += $1->code+$3->code;
 			$$->code += "mov ax, " + $1->symbol + "\n";
 			if(!$2->getName().compare("+"))
 				$$->code += "add ax, " + $3->symbol+ "\n";
@@ -793,6 +796,7 @@ simple_expression : term
 			$$ ->code += "mov " + string(temp)+", ax\n";
 			
 			$$ -> symbol = string(temp);
+			//cout << $$->code;
 		  }
 		  ;
 					
@@ -828,7 +832,7 @@ term :	unary_expression
 	
 	fprintf(lg, "%s\n\n", name.c_str());
 	
-	$$->code += $3->code;
+	$$->code += $1->code+$3->code;
 	$$->code += "mov ax, "+ $1->symbol+"\n";
 	$$->code += "mov bx, "+ $3->symbol+"\n";
 	char *temp=newTemp();
@@ -849,6 +853,7 @@ term :	unary_expression
 		$$->code += "mov "+ string(temp) + ", dx\n";		
 	}
 	$$->symbol = string(temp);
+	//cout << $$->code ;
      }
      ;
 
@@ -955,7 +960,8 @@ factor	: variable
 		$$ = assignProduction("("+$2->getName()+")", "LPAREN expression RPAREN", "factor", lg);
 		$$ -> setDataType($2->getDataType());
 		$$->symbol = $2->symbol;	
-		$$->code += $2->code;		
+		$$->code += $2->code;	
+		//cout << $2->code;	
 	}	
 	| CONST_INT 
 	{
