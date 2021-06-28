@@ -22,6 +22,7 @@ FILE * err;
 FILE * ac;
 FILE * oac;
 
+bool isMain;
 SymbolTable *symbolTable;
 string data_type = "";
 string value_type = "";
@@ -52,6 +53,11 @@ char *newTemp()
 	sprintf(b,"%d", tempCount);
 	tempCount++;
 	strcat(t,b);
+	
+	//push in vector for .data section
+	SymbolInfo * s_temp = new SymbolInfo(string(t), "notarray");
+	asm_vars.push_back(s_temp);	
+	
 	return t;
 }
 
@@ -149,24 +155,29 @@ start : program
 program : program unit 
 	{
 		$$ = assignProduction($1->getName()+$2->getName()+"\n", "program unit", "program", lg);
+	     	$$->code += $2->code;
 	}
 	| unit
 	{
 		$$ = assignProduction($1->getName()+"\n", "unit", "program", lg);
+	     	$$->code += $1->code;		
 	}
 	;
 	
 unit : var_declaration
      {
      	$$ = assignProduction($1->getName(), "var_declaration", "unit", lg);
+     	$$->code = "";     	     	
      }
      | func_declaration
      {
      	$$ = assignProduction($1->getName(), "func_declaration", "unit", lg);
+     	$$->code += $1->code;     	
      }
      | func_definition
      {
      	$$ = assignProduction($1->getName(), "func_definition", "unit", lg);
+     	$$->code += $1->code;
      }
      ;
      
@@ -269,7 +280,6 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$7->getName();
 			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
-			
 		   }
 		  
 		  
@@ -278,6 +288,7 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 		| type_specifier ID LPAREN RPAREN 
 		{ 
 			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
+
 			if(sp!=NULL)
 			{
 				string type = $1 -> getType();
@@ -303,6 +314,13 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 			string name = $1->getName()+" "+$2->getName()+"()"+$6->getName();
 			string type = "type_specifier ID LPAREN RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
+			
+			if(!$2->getName().compare("main"))
+			{
+				$$->code += "main proc\nmov ax,@data\nmov ds,ax\n";
+				$$->code += $6 -> code;
+				$$->code += "exit:\nmov ah,4ch\nint 21h\nmain endp\n";
+			}			
 		  } 
  		  ;				
 
@@ -349,12 +367,14 @@ compound_statement : LCURL {symbolTable -> EnterScope(); insertParams(); } state
  		    	$$ = assignProduction("{\n"+$3->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
  		    	symbolTable -> ExitScope();
+ 		    	$$->code += $3->code;
  		    }
  		    | LCURL {symbolTable -> EnterScope(); insertParams(); } RCURL
  		    {
  		    	$$ = assignProduction("{\n}\n", "LCURL RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
  		    	symbolTable -> ExitScope();
+ 		    	$$->code = "";
  		    }
  		    ;
  		    
@@ -447,24 +467,29 @@ declaration_list : declaration_list COMMA ID
 statements : statement
 	   {
 	   	$$ = assignProduction($1->getName()+"\n", "statement", "statements", lg);
+	   	$$->code += $1->code;
 	   }
 	   | statements statement
 	   {
 	   	$$ = assignProduction($1->getName()+$2->getName()+"\n", "statements statement", "statements", lg);
+	    	$$->code += $2->code;
 	   }
 	   ;
 	   
 statement : var_declaration
 	  {
 	 	$$ = assignProduction($1->getName(), "var_declaration", "statement", lg);
+	 	$$->code = "";
 	  }
 	  | expression_statement
 	  {
 	 	$$ = assignProduction($1->getName(), "expression_statement", "statement", lg);
+	 	$$->code += $1->code;
 	  }
 	  | compound_statement
 	  {
 	 	$$ = assignProduction($1->getName(), "compound_statement", "statement", lg);
+	 	$$->code += $1->code;
 	  }
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement
 	  {
@@ -515,6 +540,8 @@ expression_statement 	: SEMICOLON
 			| expression SEMICOLON 
 			{
 				$$ = assignProduction($1->getName()+";", "expression SEMICOLON", "expression_statement", lg);
+				$$ -> code += $1->code;
+				
 			}
 			;
 	  
@@ -535,6 +562,7 @@ variable : ID
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
 	 	$$->symbol = $1->symbol+symbolTable->getID();
+	 	$$->setVarType("notarray");
 	 	
 	 } 		
 	 | ID LTHIRD expression RTHIRD 
@@ -554,6 +582,8 @@ variable : ID
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
 	 	$$->symbol = $1->symbol+symbolTable->getID()+"["+$3->getName()+"]";
+	 	$$->code=$3->code+"mov bx, " +$3->symbol +"\nadd bx, bx\n";
+	  	$$->setVarType("array");
 	 }
 	 ;
 	 
@@ -568,6 +598,9 @@ expression : logic_expression
  	   	fprintf(lg, "%s\n\n", name.c_str());
  	   	
  	   	$$ -> setDataType($1->getDataType());
+ 	   	
+ 	   	$$->code += $1->code;
+ 	   	$$->symbol = $1->symbol;
  	   	
  	   	
  	   }
@@ -599,6 +632,19 @@ expression : logic_expression
 	   		$$ -> setDataType(sp->getDataType());
 	   	}else $$ -> setDataType("NULL");
 	   	fprintf(lg, "%s\n\n", name.c_str());
+	   	
+	   	$$->code = $3->code + $1->code;
+		$$->code+="mov ax, "+$3->symbol+"\n";
+		
+		if(!$1->getVarType().compare("array"))
+		{
+			$$->code+= "mov  "+$1->symbol+"[bx], ax\n";
+		}
+		else
+		{
+			$$->code+= "mov "+$1->symbol+", ax\n";
+		}
+	   	
 	   }
 	   ;
 			
@@ -606,6 +652,9 @@ logic_expression : rel_expression
 		 {
 		 	$$ = assignProduction($1->getName(), "rel_expression", "logic_expression", lg);
 		 	$$ -> setDataType($1->getDataType());
+		 	
+		  	$$ -> code += $1 -> code;
+		  	$$ -> symbol = $1 -> symbol;			 	
 		 }
 		 | rel_expression LOGICOP rel_expression 	
 		 {
@@ -615,6 +664,52 @@ logic_expression : rel_expression
 			if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
 				$$ -> setDataType("VOID");
 			else $$ -> setDataType("INT");
+			
+			$$->code += $3->code;
+			char * temp = newTemp();
+			$$->symbol = string(temp);
+			
+			$$->code += "mov ax, " + $3->symbol + "\n";
+			$$->code += "mov bx, " + $1->symbol +"\n";
+			char * label1 = newLabel();
+			char * label2 = newLabel();
+			
+			if(!$2->getName().compare("&&"))
+			{
+				//see if anyone is zero, jump to label1 if so
+				$$->code += "cmp ax, 0\nje "+string(label1)+"\n";
+				$$->code += "cmp bx, 0\nje "+string(label1)+"\n";
+
+				//both non zero, set 1 and jump to label2...skipping label1
+				$$->code += "mov ax, 1\n";
+				$$->code += "mov " + string(temp) + ", ax\n";
+				$$->code += "jmp " + string(label2) + "\n";
+				
+				//label1: set temp var = 0
+				$$->code += string(label1) + ":\n";
+				$$->code += "mov ax, 0\n";
+				$$->code += "mov " + string(temp) + ", ax\n";
+				
+				$$->code += string(label2) + ":\n";
+			}
+			else //OR
+			{
+				//see if anyone is 1, jump to label1 if so
+				$$->code += "cmp ax, 1\nje "+string(label1)+"\n";
+				$$->code += "cmp bx, 1\nje "+string(label1)+"\n";
+
+				//both zero, set 0 and jump to label2...skipping label1
+				$$->code += "mov ax, 0\n";
+				$$->code += "mov " + string(temp) + ", ax\n";
+				$$->code += "jmp " + string(label2) + "\n";
+				
+				//label1: set temp var = 1
+				$$->code += string(label1) + ":\n";
+				$$->code += "mov ax, 1\n";
+				$$->code += "mov " + string(temp) + ", ax\n";
+				
+				$$->code += string(label2) + ":\n";				
+			}
 		 }
 		 ;
 			
@@ -622,6 +717,9 @@ rel_expression	: simple_expression
 		{
 			$$ = assignProduction($1->getName(), "simple_expression", "rel_expression", lg);
 			$$ -> setDataType($1->getDataType());
+		  	
+		  	$$ -> code += $1 -> code;
+		  	$$ -> symbol = $1 -> symbol;			
 		}
 		| simple_expression RELOP simple_expression	
 		{
@@ -631,6 +729,38 @@ rel_expression	: simple_expression
 			if(!$1->getDataType().compare("VOID") || !$3->getDataType().compare("VOID")) 
 				$$ -> setDataType("VOID");
 			else $$ -> setDataType("INT");
+	
+			$$->code+=$3->code;
+			$$->code+="mov ax, " + $1->symbol+"\n";
+			$$->code+="cmp ax, " + $3->symbol+"\n";
+			char *temp=newTemp();
+			char *label1=newLabel();
+			char *label2=newLabel();
+			
+			if(!$2->getName().compare("<")){
+				$$->code+="jl " + string(label1)+"\n";
+			}
+			else if(!$2->getName().compare("<=")){
+				$$->code+="jle " + string(label1)+"\n";
+			}
+			else if(!$2->getName().compare(">")){
+				$$->code+="jg " + string(label1)+"\n";			
+			}
+			else if(!$2->getName().compare(">=")){
+				$$->code+="jge " + string(label1)+"\n";			
+			}
+			else if(!$2->getName().compare("==")){
+				$$->code+="je " + string(label1)+"\n";			
+			}
+			else{
+				$$->code+="jne " + string(label1)+"\n";			
+			}
+			
+			$$->code+="mov "+string(temp) +", 0\n";
+			$$->code+="jmp "+string(label2) +"\n";
+			$$->code+=string(label1)+":\nmov "+string(temp)+", 1\n";
+			$$->code+=string(label2)+":\n";
+			$$->symbol = string(temp);			
 		}
 		;
 				
@@ -640,7 +770,7 @@ simple_expression : term
 		  	$$ -> setDataType($1->getDataType());
 		  	
 		  	$$ -> code += $1 -> code;
-		  	$$ -> symbol = $$ -> symbol;
+		  	$$ -> symbol = $1 -> symbol;
 		  }
 		  | simple_expression ADDOP term 
 		  {
