@@ -28,6 +28,8 @@ string data_type = "";
 string value_type = "";
 vector<SymbolInfo*> params;
 vector<string> args;
+
+//asm .data section
 vector<SymbolInfo*> asm_vars;
 
 int labelCount=0;
@@ -100,9 +102,18 @@ bool FindParam(string name)
 	return false;
 }
 
-void printDataAsm()
+string getDataAsm()
 {
-	
+	string str = "\n.data\n";
+	for(int i = 0; i < asm_vars.size(); i++)
+	{
+		SymbolInfo * temp = asm_vars.at(i);
+		if(!temp->getType().compare("notarray"))
+			str += "\t"+temp->getName()+" dw ?\n";
+		else
+			str += "\t"+temp->getName()+" dw " + temp->getType() + " dup(?)\n";
+	}
+	return str;
 }
 
 string PrintFunction(){
@@ -142,7 +153,7 @@ start : program
 		fprintf(ac, ".model small\n.stack 100h\n"); 
 		
 		//data
-		printDataAsm(); 
+		fprintf(ac, "%s\n", getDataAsm().c_str());
 		
 		//println
 		fprintf(ac, ".code%s", PrintFunction().c_str()); 
@@ -319,7 +330,7 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 			{
 				$$->code += "main proc\nmov ax,@data\nmov ds,ax\n";
 				$$->code += $6 -> code;
-				$$->code += "exit:\nmov ah,4ch\nint 21h\nmain endp\n";
+				$$->code += "exit:\nmov ah,4ch\nint 21h\nmain endp\nend main";
 			}			
 		  } 
  		  ;				
@@ -432,7 +443,7 @@ declaration_list : declaration_list COMMA ID
 	 		}
 	 		
 	 		//array	 		
-	 		SymbolInfo * temp = new SymbolInfo($1->getName()+symbolTable->getID(), $5->getName());
+	 		SymbolInfo * temp = new SymbolInfo($3->getName()+symbolTable->getID(), $5->getName());
 	 		asm_vars.push_back(temp);		
 	 		
  		  }
@@ -503,6 +514,14 @@ statement : var_declaration
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement";
 	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
+
+		$$->code += $3->code;		
+		char *label=newLabel();
+		$$->code+="mov ax, "+$3->symbol+"\n";
+		$$->code+="cmp ax, 0\n";
+		$$->code+="je "+string(label)+"\n";
+		$$->code+=$5->code;
+		$$->code+=string(label)+":\n";	 	
 	  }
 	  | IF LPAREN expression RPAREN statement ELSE statement
 	  {
@@ -527,6 +546,12 @@ statement : var_declaration
 	 		printError("Undeclared variable "+$3->getName());
 	 	}
 	 	fprintf(lg, "%s\n\n", name.c_str());
+	 	
+	 	string code_ = "mov ax, " + $3->getName()+symbolTable->getID() + "\n";
+	 	code_ += "mov print_var, ax\n";
+	 	code_ += "call print\n";
+	 	$$->code += code_;
+	 	
 	  }
 	  | RETURN expression SEMICOLON
 	  {
@@ -1039,7 +1064,7 @@ int main(int argc,char *argv[])
 	ac = fopen("code.asm", "w");
 	
 	symbolTable = new SymbolTable(30);
-	
+	asm_vars.push_back(new SymbolInfo("print_var" ,"notarray"));
 
 	
 	yyin=fp;

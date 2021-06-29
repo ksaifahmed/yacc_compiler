@@ -1,5 +1,17 @@
 .model small
 .stack 100h
+
+.data
+	print_var dw ?
+	a11 dw ?
+	b11 dw ?
+	c11 dw 3 dup(?)
+	t0 dw ?
+	t1 dw ?
+	t2 dw ?
+	t3 dw ?
+	t4 dw ?
+
 .code
 
 print PROC
@@ -52,7 +64,7 @@ xor dx, dx
 div bx
 mov t2, dx
 mov ax, t2
-mov a1.1, ax
+mov a11, ax
 mov ax, 1
 cmp ax, 5
 jl L0
@@ -62,12 +74,19 @@ L0:
 mov t3, 1
 L1:
 mov ax, t3
-mov b1.1, ax
+mov b11, ax
 mov bx, 0
 add bx, bx
 mov ax, 2
-mov  c1.1[0][bx], ax
+mov  c11[0][bx], ax
+mov ax, a11
+mov print_var, ax
+call print
+mov ax, b11
+mov print_var, ax
+call print
 exit:
 mov ah,4ch
 int 21h
 main endp
+end main
