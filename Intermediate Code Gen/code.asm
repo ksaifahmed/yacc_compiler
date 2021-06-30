@@ -3,14 +3,16 @@
 
 .data
 	print_var dw ?
+	ret_temp dw ?
 	a11 dw ?
-	b11 dw ?
-	c11 dw ?
-	i11 dw ?
 	t0 dw ?
+	a12 dw ?
+	b12 dw ?
+	x12 dw ?
 	t1 dw ?
 	t2 dw ?
-	t3 dw ?
+	a13 dw ?
+	b13 dw ?
 
 .code
 
@@ -48,55 +50,70 @@ printLabel2:
 	ret
 print endp
 
+f proc
+push ax
+push bx
+push cx
+push dx
+push di
+mov ax, 2
+mov bx, a11
+mul bx
+mov t0, ax
+move ax, t0
+mov ret_temp, ax
+pop di
+pop dx
+pop cx
+pop bx
+pop ax
+ret
+mov ax, 9
+mov  a11, ax
+f endp
+g proc
+push ax
+push bx
+push cx
+push dx
+push di
+mov ax, 
+add ax, a12
+mov t1, ax
+mov ax, t1
+add ax, b12
+mov t2, ax
+mov ax, t2
+mov  x12, ax
+move ax, x12
+mov ret_temp, ax
+pop di
+pop dx
+pop cx
+pop bx
+pop ax
+ret
+g endp
 main proc
 mov ax,@data
 mov ds,ax
-mov ax, 0
-mov  b11, ax
 mov ax, 1
-mov  c11, ax
-mov ax, 0
-mov  i11, ax
-L4:
-mov ax, i11
-cmp ax, 4
-jl L0
-mov t0, 0
-jmp L1
-L0:
-mov t0, 1
-L1:
-mov ax, t0
-cmp ax, 0
-je L5
-mov ax, i11
-mov t1, ax
-inc i11
-mov ax, 3
-mov  a11, ax
-L2:
-mov ax, a11
-mov t2, ax
-dec a11
-mov ax, t2
-cmp ax, 0
-je L3
-mov ax, b11
-mov t3, ax
-inc b11
-jmp L2
-L3:
-jmp L4
-L5:
-mov ax, a11
+mov  a13, ax
+mov ax, 2
+mov  b13, ax
+mov ax, 
+mov  a13, ax
+mov ax, a13
 mov print_var, ax
 call print
-mov ax, b11
-mov print_var, ax
-call print
-mov ax, c11
-mov print_var, ax
-call print
+move ax, 0
+mov ret_temp, ax
+pop di
+pop dx
+pop cx
+pop bx
+pop ax
+ret
 exit:
 mov ah,4ch
 int 21h

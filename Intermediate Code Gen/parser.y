@@ -31,6 +31,7 @@ vector<string> args;
 
 //asm .data section
 vector<SymbolInfo*> asm_vars;
+vector<string> temp_asm_vars;
 
 int labelCount=0;
 int tempCount=0;
@@ -83,6 +84,16 @@ void insertParams()
 		symbolTable -> Insert(s->getName(), s->getType(), s->getDataType());	
 	}
 	//params.clear();
+}
+
+void insertProcParams()
+{
+	for(int i=0; i<temp_asm_vars.size(); i++)
+	{
+		string s = temp_asm_vars.at(i);
+		SymbolInfo * var = new SymbolInfo(s+symbolTable->getID(), "notarray");
+		asm_vars.push_back(var);
+	}	
 }
 
 void printError(string msg)
@@ -293,6 +304,9 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$7->getName();
 			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
+			$$->code += $2->getName() + " proc\npush ax\npush bx\npush cx\npush dx\npush di\n";
+			$$->code += $7->code;
+			$$->code += $2->getName() + " endp\n";
 		   }
 		  
 		  
@@ -333,6 +347,11 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 				$$->code += "main proc\nmov ax,@data\nmov ds,ax\n";
 				$$->code += $6 -> code;
 				$$->code += "exit:\nmov ah,4ch\nint 21h\nmain endp\nend main";
+			}else
+			{
+				$$->code += $2->getName() + " proc\npush ax\npush bx\npush cx\npush dx\npush di\n";
+				$$->code += $6->code;
+				$$->code += $2->getName() + " endp\n";		
 			}			
 		  } 
  		  ;				
@@ -353,6 +372,8 @@ parameter_list  : parameter_list COMMA type_specifier ID
 			s -> setDataType($3->getType());
 			params.push_back(s);
 			
+			temp_asm_vars.push_back($4->getName());
+			
 		}
 		| parameter_list COMMA type_specifier
 		{
@@ -367,6 +388,8 @@ parameter_list  : parameter_list COMMA type_specifier ID
 			SymbolInfo * s = new SymbolInfo($2->getName(), "ID");
 			s -> setDataType($1->getType());
 			params.push_back(s);
+			
+			temp_asm_vars.push_back($2->getName());
 		}
 		| type_specifier
 		{
@@ -375,14 +398,14 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		;
 
  		
-compound_statement : LCURL {symbolTable -> EnterScope(); insertParams(); } statements RCURL
+compound_statement : LCURL {symbolTable->EnterScope(); insertParams(); insertProcParams(); temp_asm_vars.clear();} statements RCURL
  		    {
  		    	$$ = assignProduction("{\n"+$3->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
  		    	symbolTable -> ExitScope();
  		    	$$->code += $3->code;
  		    }
- 		    | LCURL {symbolTable -> EnterScope(); insertParams(); } RCURL
+ 		    | LCURL {symbolTable -> EnterScope(); insertParams(); temp_asm_vars.clear();} RCURL
  		    {
  		    	$$ = assignProduction("{\n}\n", "LCURL RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
@@ -596,6 +619,11 @@ statement : var_declaration
 	  {
 	  	string type = "RETURN expression SEMICOLON";
 	 	$$ = assignProduction("return "+$2->getName()+";", type, "statement", lg);
+		
+		$$->code += $2->code;
+	 	$$->code += "move ax, " + $2->symbol + "\n";
+	 	$$->code += "mov ret_temp, ax\n";
+	 	$$->code += "pop di\npop dx\npop cx\npop bx\npop ax\nret\n";
 	  }
 	  ;
 	  
@@ -1013,6 +1041,8 @@ factor	: variable
 		}
 		args.clear();
 		fprintf(lg, "%s\n\n", name.c_str());
+		
+		$$->symbol = "ret_temp";
 					
 	}	
 	| LPAREN expression RPAREN
@@ -1104,6 +1134,7 @@ int main(int argc,char *argv[])
 	
 	symbolTable = new SymbolTable(30);
 	asm_vars.push_back(new SymbolInfo("print_var" ,"notarray"));
+	asm_vars.push_back(new SymbolInfo("ret_temp" ,"notarray"));	
 
 	
 	yyin=fp;
