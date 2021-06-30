@@ -10,3 +10,4 @@ echo 'Generated the scanner object file'
 g++ y.o l.o -lfl
 echo 'All ready, running'
 ./a.out input.c
+echo 'All Files Generated Successfully'

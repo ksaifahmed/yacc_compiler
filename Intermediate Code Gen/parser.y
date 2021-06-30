@@ -511,6 +511,20 @@ statement : var_declaration
 	  	string type = "FOR LPAREN expression_statement expression_statement expression RPAREN statement";
 	  	string name = "for ("+$3->getName()+$4->getName()+$5->getName()+") "+$7->getName();
 	 	$$ = assignProduction(name, type, "statement", lg);
+		
+		$$->code += $3->code; 
+		char * for_loop = newLabel();
+		char * exit_label = newLabel();
+		$$->code += string(for_loop) + ":\n";
+		$$->code += $4->code;
+		$$->code += "mov ax, " + $4->symbol + "\n";
+		$$->code += "cmp ax, 0\n";
+		$$->code += "je " + string(exit_label) + "\n";
+		$$->code += $5->code;
+		$$->code += $7->code;
+		$$->code += "jmp " + string(for_loop) + "\n";
+		$$->code += string(exit_label)+":\n";
+				
 	  }
 	  | IF LPAREN expression RPAREN statement %prec FAKE_ELSE
 	  {
@@ -546,6 +560,17 @@ statement : var_declaration
 	  {
 	  	string type = "WHILE LPAREN expression RPAREN statement";
 	 	$$ = assignProduction("while ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
+	 	
+	 	char * loop_label = newLabel();
+	 	char * exit_label = newLabel();
+	 	$$->code += string(loop_label) + ":\n";
+	 	$$->code += $3->code;
+	 	$$->code += "mov ax, " + $3->symbol + "\n";
+	 	$$->code += "cmp ax, 0\n";
+	 	$$->code += "je " + string(exit_label) + "\n";
+	 	$$->code += $5->code;
+	 	$$->code += "jmp " + string(loop_label)+"\n";
+	 	$$->code += string(exit_label)+":\n";
 	  }	  
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON
 	  {
@@ -582,13 +607,14 @@ expression_statement 	: SEMICOLON
 			{
 				$$ = assignProduction($1->getName()+";", "expression SEMICOLON", "expression_statement", lg);
 				$$ -> code += $1->code;
-				
+				$$-> symbol = $1-> symbol;
 			}
 			;
 	  
 variable : ID
 	 {
  	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+ 	 	string var_id = symbolTable -> Lookup_ID($1->getName());
 	 	
 	 	string name = $1->getName();
 	 	string type = "ID";
@@ -602,7 +628,7 @@ variable : ID
 	 	else printError("Undeclared variable "+$1->getName());
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->getName()+symbolTable->getID();
+	 	$$->symbol = $1->getName()+var_id;
 	 	$$->setVarType("notarray");
 	 	$$->code="";
 	 	
@@ -614,6 +640,8 @@ variable : ID
 	 	
 	 	$$ = new SymbolInfo(name, type);
 	 	SymbolInfo * sp = symbolTable -> Lookup($1->getName());
+ 	 	string var_id = symbolTable -> Lookup_ID($1->getName());
+ 	 	
 	 	if(sp != NULL) $$ -> setDataType(sp -> getDataType());
 	 	
 	 	fprintf(lg, "Line %d: variable : %s\n\n", line_count, type.c_str());
@@ -623,7 +651,7 @@ variable : ID
 	 	if($3->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->getName()+symbolTable->getID()+"[bx]";
+	 	$$->symbol = $1->getName()+var_id+"[bx]";
 	 	$$->code=$3->code+"mov bx, " +$3->symbol +"\nadd bx, bx\n";
 	  	$$->setVarType("array");
 	 }
@@ -1015,8 +1043,9 @@ factor	: variable
 		$$ -> setDataType($1->getDataType());	
 		
 		$$->code += $1->code;
-		$$->code += "mov ax, "+$1->symbol+"\nadd ax, 1\nmov "+$1->symbol+", ax\n";
-		$$->symbol = $1->symbol;
+		char * temp = newTemp();
+		$$->code += "mov ax, "+$1->symbol+"\nmov "+ string(temp) + ", ax\ninc "+$1->symbol+"\n";
+		$$->symbol = string(temp);
 		
 	}	
 	| variable DECOP
@@ -1025,8 +1054,9 @@ factor	: variable
 		$$ -> setDataType($1->getDataType());
 		
 		$$->code+= $1->code;
-		$$->code += "mov ax, "+$1->symbol+"\nsub ax, 1\nmov "+$1->symbol+", ax\n";
-		$$->symbol = $1->symbol;
+		char *temp = newTemp();
+		$$->code += "mov ax, "+$1->symbol+"\nmov "+ string(temp) + ", ax\ndec "+$1->symbol+"\n";
+		$$->symbol = string(temp);
 	}
 	;
 	
