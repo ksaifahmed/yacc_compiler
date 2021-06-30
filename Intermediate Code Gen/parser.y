@@ -149,17 +149,19 @@ start : program
 		//$$ = assignProduction($1->getName(), "program", "start", lg);
 		fprintf(lg, "Line %d: start : program\n\n", line_count); 
 		
-		//headers
-		fprintf(ac, ".model small\n.stack 100h\n"); 
+		if(error_count == 0){
+			//headers
+			fprintf(ac, ".model small\n.stack 100h\n"); 
 		
-		//data
-		fprintf(ac, "%s\n", getDataAsm().c_str());
+			//data
+			fprintf(ac, "%s\n", getDataAsm().c_str());
 		
-		//println
-		fprintf(ac, ".code%s", PrintFunction().c_str()); 
+			//println() function
+			fprintf(ac, ".code%s", PrintFunction().c_str()); 
 		
-		//codes
-		fprintf(ac, "%s", $1->code.c_str()); 
+			//codes
+			fprintf(ac, "%s", $1->code.c_str()); 
+		}
 	}
 	;
 
@@ -527,6 +529,18 @@ statement : var_declaration
 	  {
 	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
 	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName()+"else "+$7->getName(), type, "statement", lg);
+	 	
+		$$->code += $3->code;		
+		char *label1=newLabel();
+		char *label2 = newLabel();
+		$$->code+="mov ax, "+$3->symbol+"\n";
+		$$->code+="cmp ax, 0\n";
+		$$->code+="je "+string(label1)+"\n";
+		$$->code+=$5->code;
+		$$->code+= "jmp " + string(label2) + "\n";
+		$$->code+=string(label1)+":\n";
+		$$->code+=$7->code;
+		$$->code+=string(label2) + ":\n"; 		 	
 	  }
 	  | WHILE LPAREN expression RPAREN statement
 	  {
@@ -590,6 +604,7 @@ variable : ID
 	 	
 	 	$$->symbol = $1->getName()+symbolTable->getID();
 	 	$$->setVarType("notarray");
+	 	$$->code="";
 	 	
 	 } 		
 	 | ID LTHIRD expression RTHIRD 
@@ -608,7 +623,7 @@ variable : ID
 	 	if($3->getDataType().compare("INT")) printError("Expression inside third brackets not an integer");
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->getName()+symbolTable->getID()+"["+$3->getName()+"]";
+	 	$$->symbol = $1->getName()+symbolTable->getID()+"[bx]";
 	 	$$->code=$3->code+"mov bx, " +$3->symbol +"\nadd bx, bx\n";
 	  	$$->setVarType("array");
 	 }
@@ -660,18 +675,10 @@ expression : logic_expression
 	   	}else $$ -> setDataType("NULL");
 	   	fprintf(lg, "%s\n\n", name.c_str());
 	   	
-	   	$$->code = $3->code + $1->code;
-		$$->code+="mov ax, "+$3->symbol+"\n";
-		
-		if(!$1->getVarType().compare("array"))
-		{
-			$$->code+= "mov  "+$1->symbol+"[bx], ax\n";
-		}
-		else
-		{
-			$$->code+= "mov "+$1->symbol+", ax\n";
-		}
-	   	
+	   	$$->code += $3->code;
+		$$->code +="mov ax, "+$3->symbol+"\n";
+		$$->code += $1->code;
+		$$->code+= "mov  "+$1->symbol+", ax\n";	   	
 	   }
 	   ;
 			
@@ -936,7 +943,7 @@ factor	: variable
 		$$ = assignProduction($1->getName(), "variable", "factor", lg);
 		$$ -> setDataType($1->getDataType());	
 		$$->symbol = $1->symbol;	
-		$$->code = "";
+		$$->code += $1->code;
 	}
 	| ID LPAREN argument_list RPAREN
 	{
@@ -1007,6 +1014,7 @@ factor	: variable
 		$$ = assignProduction($1->getName()+"++", "variable INCOP", "factor", lg);
 		$$ -> setDataType($1->getDataType());	
 		
+		$$->code += $1->code;
 		$$->code += "mov ax, "+$1->symbol+"\nadd ax, 1\nmov "+$1->symbol+", ax\n";
 		$$->symbol = $1->symbol;
 		
@@ -1016,6 +1024,7 @@ factor	: variable
 		$$ = assignProduction($1->getName()+"--", "variable DECOP", "factor", lg);
 		$$ -> setDataType($1->getDataType());
 		
+		$$->code+= $1->code;
 		$$->code += "mov ax, "+$1->symbol+"\nsub ax, 1\nmov "+$1->symbol+", ax\n";
 		$$->symbol = $1->symbol;
 	}

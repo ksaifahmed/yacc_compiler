@@ -64,7 +64,7 @@ xor dx, dx
 div bx
 mov t2, dx
 mov ax, t2
-mov a11, ax
+mov  a11, ax
 mov ax, 1
 cmp ax, 5
 jl L0
@@ -74,11 +74,41 @@ L0:
 mov t3, 1
 L1:
 mov ax, t3
-mov b11, ax
+mov  b11, ax
+mov ax, 2
 mov bx, 0
 add bx, bx
-mov ax, 2
-mov  c11[0][bx], ax
+mov  c11[bx], ax
+mov ax, b11
+mov bx, a11
+cmp ax, 0
+je L2
+cmp bx, 0
+je L2
+mov ax, 1
+mov t4, ax
+jmp L3
+L2:
+mov ax, 0
+mov t4, ax
+L3:
+mov ax, t4
+cmp ax, 0
+je L4
+mov bx, 0
+add bx, bx
+mov ax, c11[bx]
+add ax, 1
+mov c11[bx], ax
+jmp L5
+L4:
+mov bx, 0
+add bx, bx
+mov ax, c11[bx]
+mov bx, 1
+add bx, bx
+mov  c11[bx], ax
+L5:
 mov ax, a11
 mov print_var, ax
 call print
