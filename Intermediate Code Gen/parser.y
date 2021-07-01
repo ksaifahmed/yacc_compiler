@@ -22,7 +22,7 @@ FILE * err;
 FILE * ac;
 FILE * oac;
 
-bool isMain;
+bool isMain = false;
 SymbolTable *symbolTable;
 string data_type = "";
 string value_type = "";
@@ -32,9 +32,11 @@ vector<string> args;
 //asm .data section
 vector<SymbolInfo*> asm_vars;
 vector<string> temp_asm_vars;
+vector<string> asm_args;
 
 int labelCount=0;
 int tempCount=0;
+
 
 
 char *newLabel()
@@ -64,6 +66,15 @@ char *newTemp()
 	return t;
 }
 
+string popArgs()
+{
+	string str = "";
+	for(int i = asm_args.size()-1;  i >= 0; i--)
+		str += "pop "+asm_args.at(i)+"\n";
+	asm_args.clear();
+	return str;
+}
+
 
 void yyerror(char *s)
 {
@@ -86,15 +97,7 @@ void insertParams()
 	//params.clear();
 }
 
-void insertProcParams()
-{
-	for(int i=0; i<temp_asm_vars.size(); i++)
-	{
-		string s = temp_asm_vars.at(i);
-		SymbolInfo * var = new SymbolInfo(s+symbolTable->getID(), "notarray");
-		asm_vars.push_back(var);
-	}	
-}
+
 
 void printError(string msg)
 {
@@ -125,6 +128,27 @@ string getDataAsm()
 			str += "\t"+temp->getName()+" dw " + temp->getType() + " dup(?)\n";
 	}
 	return str;
+}
+
+
+void insertProcParams()
+{
+	vector<string> tmp;
+	for(int i=0; i<temp_asm_vars.size(); i++)
+		tmp.push_back(temp_asm_vars.at(i));
+	temp_asm_vars.clear();
+	for(int i=0; i<tmp.size(); i++)
+		temp_asm_vars.push_back(tmp.at(i)+symbolTable->getID());
+}
+
+int getStackAddress(string var)
+{
+	for(int i=0; i<temp_asm_vars.size(); i++)
+	{
+		if(!var.compare(temp_asm_vars.at(i)))
+			return (i+2)*2;
+	}
+	return 0;
 }
 
 string PrintFunction(){
@@ -172,6 +196,9 @@ start : program
 		
 			//codes
 			fprintf(ac, "%s", $1->code.c_str()); 
+			
+			//prompt in terminal
+			cout << "Assembly code generated from input!" << endl;
 		}
 	}
 	;
@@ -304,9 +331,10 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 			string name = $1->getName()+" "+$2->getName()+"("+$4->getName()+")"+$7->getName();
 			string type = "type_specifier ID LPAREN parameter_list RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
-			$$->code += $2->getName() + " proc\npush ax\npush bx\npush cx\npush dx\npush di\n";
+			$$->code += $2->getName() + " proc\npush ax\npush bx\npush dx\npush di\n";
 			$$->code += $7->code;
-			$$->code += $2->getName() + " endp\n";
+			$$->code += $2->getName() + " endp\n\n\n";
+			temp_asm_vars.clear();				
 		   }
 		  
 		  
@@ -315,7 +343,8 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 		| type_specifier ID LPAREN RPAREN 
 		{ 
 			SymbolInfo * sp = symbolTable -> Lookup($2->getName());
-
+			if(!$2->getName().compare("main")) isMain = true;
+			else isMain = false;
 			if(sp!=NULL)
 			{
 				string type = $1 -> getType();
@@ -337,21 +366,22 @@ func_definition : type_specifier ID LPAREN parameter_list RPAREN
 		}
 		compound_statement
 		  {
-		  	params.clear();
+		  	params.clear(); 
 			string name = $1->getName()+" "+$2->getName()+"()"+$6->getName();
 			string type = "type_specifier ID LPAREN RPAREN compound_statement";
 			$$ = assignProduction(name, type, "func_definition", lg);
 			
 			if(!$2->getName().compare("main"))
 			{
-				$$->code += "main proc\nmov ax,@data\nmov ds,ax\n";
+				$$->code += "main proc\nmov ax,@data\nmov ds,ax\nmov bp,sp\n";
 				$$->code += $6 -> code;
 				$$->code += "exit:\nmov ah,4ch\nint 21h\nmain endp\nend main";
 			}else
 			{
-				$$->code += $2->getName() + " proc\npush ax\npush bx\npush cx\npush dx\npush di\n";
+				$$->code += $2->getName() + " proc\npush ax\npush bx\npush dx\npush di\n";
 				$$->code += $6->code;
-				$$->code += $2->getName() + " endp\n";		
+				$$->code += $2->getName() + " endp\n\n\n";	
+				temp_asm_vars.clear();	
 			}			
 		  } 
  		  ;				
@@ -398,14 +428,14 @@ parameter_list  : parameter_list COMMA type_specifier ID
  		;
 
  		
-compound_statement : LCURL {symbolTable->EnterScope(); insertParams(); insertProcParams(); temp_asm_vars.clear();} statements RCURL
+compound_statement : LCURL {symbolTable->EnterScope(); insertParams(); insertProcParams(); } statements RCURL
  		    {
  		    	$$ = assignProduction("{\n"+$3->getName()+"}\n", "LCURL statements RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
  		    	symbolTable -> ExitScope();
  		    	$$->code += $3->code;
  		    }
- 		    | LCURL {symbolTable -> EnterScope(); insertParams(); temp_asm_vars.clear();} RCURL
+ 		    | LCURL {symbolTable -> EnterScope(); insertParams();} RCURL
  		    {
  		    	$$ = assignProduction("{\n}\n", "LCURL RCURL", "compound_statement", lg);
  		    	symbolTable -> PrintInFile(lg);
@@ -535,6 +565,7 @@ statement : var_declaration
 	  	string name = "for ("+$3->getName()+$4->getName()+$5->getName()+") "+$7->getName();
 	 	$$ = assignProduction(name, type, "statement", lg);
 		
+	 	$$->code += "; for-loop of line: " + to_string(line_count) + "\n";		
 		$$->code += $3->code; 
 		char * for_loop = newLabel();
 		char * exit_label = newLabel();
@@ -554,6 +585,7 @@ statement : var_declaration
 	  	string type = "IF LPAREN expression RPAREN statement";
 	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
 
+	 	$$->code += "; if stmt of line: " + to_string(line_count) + "\n";
 		$$->code += $3->code;		
 		char *label=newLabel();
 		$$->code+="mov ax, "+$3->symbol+"\n";
@@ -567,6 +599,7 @@ statement : var_declaration
 	  	string type = "IF LPAREN expression RPAREN statement ELSE statement";
 	 	$$ = assignProduction("if ("+$3->getName()+") "+$5->getName()+"else "+$7->getName(), type, "statement", lg);
 	 	
+	 	$$->code += "; if stmt of line: " + to_string(line_count) + "\n";
 		$$->code += $3->code;		
 		char *label1=newLabel();
 		char *label2 = newLabel();
@@ -584,6 +617,7 @@ statement : var_declaration
 	  	string type = "WHILE LPAREN expression RPAREN statement";
 	 	$$ = assignProduction("while ("+$3->getName()+") "+$5->getName(), type, "statement", lg);
 	 	
+	 	$$->code += "; while-loop of line: " + to_string(line_count) + "\n";
 	 	char * loop_label = newLabel();
 	 	char * exit_label = newLabel();
 	 	$$->code += string(loop_label) + ":\n";
@@ -609,6 +643,7 @@ statement : var_declaration
 	 	}
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
+	 	$$->code += "; println() of line: " + to_string(line_count) + "\n";
 	 	string code_ = "mov ax, " + $3->getName()+symbolTable->getID() + "\n";
 	 	code_ += "mov print_var, ax\n";
 	 	code_ += "call print\n";
@@ -620,10 +655,12 @@ statement : var_declaration
 	  	string type = "RETURN expression SEMICOLON";
 	 	$$ = assignProduction("return "+$2->getName()+";", type, "statement", lg);
 		
-		$$->code += $2->code;
-	 	$$->code += "move ax, " + $2->symbol + "\n";
-	 	$$->code += "mov ret_temp, ax\n";
-	 	$$->code += "pop di\npop dx\npop cx\npop bx\npop ax\nret\n";
+		if($2->symbol.compare("0")){		
+			$$->code += "; return stmt of line: " + to_string(line_count) + "\n";
+			$$->code += $2->code;
+		 	$$->code += "mov cx, " + $2->symbol + "\n";
+		 	$$->code += "pop di\npop dx\npop bx\npop ax\nret\n";
+		 }
 	  }
 	  ;
 	  
@@ -634,6 +671,8 @@ expression_statement 	: SEMICOLON
 			| expression SEMICOLON 
 			{
 				$$ = assignProduction($1->getName()+";", "expression SEMICOLON", "expression_statement", lg);
+				
+				$$->code += "; expr from line: " + to_string(line_count) + "\n";
 				$$ -> code += $1->code;
 				$$-> symbol = $1-> symbol;
 			}
@@ -656,9 +695,18 @@ variable : ID
 	 	else printError("Undeclared variable "+$1->getName());
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
-	 	$$->symbol = $1->getName()+var_id;
-	 	$$->setVarType("notarray");
-	 	$$->code="";
+	 	int address = getStackAddress($1->getName()+var_id);
+	 	if(address == 0){
+		 	$$->symbol = $1->getName()+var_id;
+		 	$$->setVarType("notarray");
+		 	$$->code="";	 	
+	 	}else{
+		 	$$->symbol = "word ptr[bp-"+to_string(address)+"]";
+		 	$$->setVarType("notarray");
+		 	$$->code="";	 	
+	 	}
+	 	
+
 	 	
 	 } 		
 	 | ID LTHIRD expression RTHIRD 
@@ -1042,7 +1090,15 @@ factor	: variable
 		args.clear();
 		fprintf(lg, "%s\n\n", name.c_str());
 		
-		$$->symbol = "ret_temp";
+		$$->symbol = "cx";
+		$$->code += "; function call, line: " + to_string(line_count) + "\n";
+		if(!isMain) $$->code += "mov ax,bp\n";	
+		$$->code += "push bp\n";
+		$$->code += $3->code; //push args
+		if(!isMain) $$->code += "mov bp,ax\n";		
+		$$->code += "call " + $1->getName() + "\n";
+		$$->code += popArgs();
+		$$->code += "pop bp\n";
 					
 	}	
 	| LPAREN expression RPAREN
@@ -1093,6 +1149,7 @@ factor	: variable
 argument_list : arguments
 		{
 			$$ = assignProduction($1->getName(), "arguments", "argument_list", lg);
+			$$->code += $1->code;
 		} 
 		|
 		{
@@ -1105,11 +1162,19 @@ arguments : arguments COMMA logic_expression
 			$$ = assignProduction($1->getName()+","+$3->getName(), "arguments COMMA logic_expression", "arguments", lg);
 			args.push_back($3->getDataType());
 			
+			$$->code +=$1->code + $3->code;
+			asm_args.push_back($3->symbol);
+			$$->code += "push " + $3->symbol + "\n";
+			
 		}
 	      | logic_expression 
 	      {
 	      		$$ = assignProduction($1->getName(), "logic_expression", "arguments", lg);
 			args.push_back($1->getDataType());
+			
+			$$->code += $1->code;
+			asm_args.push_back($1->symbol);
+			$$->code += "push " + $1->symbol + "\n";
 	      }
 	      ;
 	      

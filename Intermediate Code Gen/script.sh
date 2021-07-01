@@ -8,6 +8,6 @@ g++ -w -c -o l.o lex.yy.c
 # if the above command doesn't work try g++ -fpermissive -w -c -o l.o lex.yy.c
 echo 'Generated the scanner object file'
 g++ y.o l.o -lfl
-echo 'All ready, running'
+echo 'All object files created, ready for input'
 ./a.out input.c
-echo 'All Files Generated Successfully'
+echo 'Script Terminated'

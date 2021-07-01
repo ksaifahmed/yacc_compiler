@@ -4,10 +4,7 @@
 .data
 	print_var dw ?
 	ret_temp dw ?
-	a11 dw ?
 	t0 dw ?
-	a12 dw ?
-	b12 dw ?
 	x12 dw ?
 	t1 dw ?
 	t2 dw ?
@@ -53,67 +50,82 @@ print endp
 f proc
 push ax
 push bx
-push cx
 push dx
 push di
+; return stmt of line: 2
 mov ax, 2
-mov bx, a11
+mov bx, word ptr[bp-4]
 mul bx
 mov t0, ax
-move ax, t0
-mov ret_temp, ax
+mov cx, t0
 pop di
 pop dx
-pop cx
 pop bx
 pop ax
 ret
+; expr from line: 3
 mov ax, 9
-mov  a11, ax
+mov  word ptr[bp-4], ax
 f endp
+
+
 g proc
 push ax
 push bx
-push cx
 push dx
 push di
-mov ax, 
-add ax, a12
+; expr from line: 8
+; function call, line: 8
+mov ax,bp
+push bp
+push word ptr[bp-4]
+mov bp,ax
+call f
+pop word ptr[bp-4]
+pop bp
+mov ax, cx
+add ax, word ptr[bp-4]
 mov t1, ax
 mov ax, t1
-add ax, b12
+add ax, word ptr[bp-6]
 mov t2, ax
 mov ax, t2
 mov  x12, ax
-move ax, x12
-mov ret_temp, ax
+; return stmt of line: 9
+mov cx, x12
 pop di
 pop dx
-pop cx
 pop bx
 pop ax
 ret
 g endp
+
+
 main proc
 mov ax,@data
 mov ds,ax
+mov bp,sp
+; expr from line: 14
 mov ax, 1
 mov  a13, ax
+; expr from line: 15
 mov ax, 2
 mov  b13, ax
-mov ax, 
+; expr from line: 16
+; function call, line: 16
+push bp
+push a13
+push b13
+call g
+pop b13
+pop a13
+pop bp
+mov ax, cx
 mov  a13, ax
+; println() of line: 17
 mov ax, a13
 mov print_var, ax
 call print
-move ax, 0
-mov ret_temp, ax
-pop di
-pop dx
-pop cx
-pop bx
-pop ax
-ret
 exit:
 mov ah,4ch
 int 21h
