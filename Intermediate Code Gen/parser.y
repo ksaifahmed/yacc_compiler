@@ -152,8 +152,13 @@ int getStackAddress(string var)
 }
 
 string PrintFunction(){
-	return "\n\nprint PROC\n\tpush ax\n\tpush bx \n\tpush cx\n\tpush dx\n\tmov ax, print_var\n\tmov bx, 10\n\tmov cx, 0\nprintLabel1:\n\tmov dx, 0\n\tdiv bx\n\tpush dx\n\tinc cx\n\tcmp ax, 0\n\tjne printLabel1\nprintLabel2:\n\tmov ah, 2\n\tpop dx\n\tadd dl, '0'\n\tint 21h\n\tdec cx\n\tcmp cx, 0\n\tjne printLabel2\n\tmov dl, 0Ah\n\tint 21h\n\tmov dl, 0Dh\n\tint 21h\n\tpop dx\n\tpop cx\n\tpop bx\n\tpop ax\n\tret\nprint endp\n\n";
+	return "\n\nprint PROC\n\tpush ax\n\tpush bx \n\tpush cx\n\tpush dx\n\tmov ax, print_var \n\tcmp ax,32767\n\tjbe POS \n\tpush ax\n\tmov ah,2\n\tmov dl,'-'\n\tint 21h\n\tpop ax  \n\tneg ax\nPOS: \n\tmov bx, 10\n\tmov cx, 0\nprintLabel1:\n\tmov dx, 0\n\tdiv bx\n\tpush dx\n\tinc cx\n\tcmp ax, 0\n\tjne printLabel1\nprintLabel2:\n\tmov ah, 2\n\tpop dx\n\tadd dl, '0'\n\tint 21h\n\tdec cx\n\tcmp cx, 0\n\tjne printLabel2\n\tmov dl, 0Ah\n\tint 21h\n\tmov dl, 0Dh\n\tint 21h\n\tpop dx\n\tpop cx\n\tpop bx\n\tpop ax\n\tret\nprint endp\n\n";
 	}
+
+void generateOptimizedCode()
+{
+	
+}
 
 %}
 
@@ -1012,7 +1017,7 @@ unary_expression : ADDOP unary_expression
 			 	char *temp=newTemp();
 				$$->code="mov ax, " + $2->symbol + "\n";
 				$$->code+="neg ax\n";
-				$$->code+="mov "+string(temp)+", ax";
+				$$->code+="mov "+string(temp)+", ax\n";
 				$$->symbol = string(temp);		 		
 			}
 			
@@ -1028,7 +1033,7 @@ unary_expression : ADDOP unary_expression
 		 	char *temp=newTemp();
 			$$->code="mov ax, " + $2->symbol + "\n";
 			$$->code+="not ax\n";
-			$$->code+="mov "+string(temp)+", ax";		
+			$$->code+="mov "+string(temp)+", ax\n";		
 	
 			$$->symbol = string(temp); 	
 		 		
@@ -1199,7 +1204,6 @@ int main(int argc,char *argv[])
 	
 	symbolTable = new SymbolTable(30);
 	asm_vars.push_back(new SymbolInfo("print_var" ,"notarray"));
-	asm_vars.push_back(new SymbolInfo("ret_temp" ,"notarray"));	
 
 	
 	yyin=fp;
@@ -1213,7 +1217,14 @@ int main(int argc,char *argv[])
 	fclose(yyin);
 	fclose(lg);
 	fclose(err);
+	fclose(ac);
 	
+	oac = fopen("optimized code.asm", "w");
+	ac = fopen("code.asm", "r");
+	generateOptimizedCode();
+	
+	fclose(ac);
+	fclose(oac);
 	
 	return 0;
 }

@@ -3,13 +3,14 @@
 
 .data
 	print_var dw ?
-	ret_temp dw ?
+	a11 dw ?
+	b11 dw ?
+	c11 dw ?
+	i11 dw ?
 	t0 dw ?
-	x12 dw ?
 	t1 dw ?
 	t2 dw ?
-	a13 dw ?
-	b13 dw ?
+	t3 dw ?
 
 .code
 
@@ -18,7 +19,16 @@ print PROC
 	push bx 
 	push cx
 	push dx
-	mov ax, print_var
+	mov ax, print_var 
+	cmp ax,32767
+	jbe POS 
+	push ax
+	mov ah,2
+	mov dl,'-'
+	int 21h
+	pop ax  
+	neg ax
+POS: 
 	mov bx, 10
 	mov cx, 0
 printLabel1:
@@ -47,83 +57,65 @@ printLabel2:
 	ret
 print endp
 
-f proc
-push ax
-push bx
-push dx
-push di
-; return stmt of line: 2
-mov ax, 2
-mov bx, word ptr[bp-4]
-mul bx
-mov t0, ax
-mov cx, t0
-pop di
-pop dx
-pop bx
-pop ax
-ret
-; expr from line: 3
-mov ax, 9
-mov  word ptr[bp-4], ax
-f endp
-
-
-g proc
-push ax
-push bx
-push dx
-push di
-; expr from line: 8
-; function call, line: 8
-mov ax,bp
-push bp
-push word ptr[bp-4]
-mov bp,ax
-call f
-pop word ptr[bp-4]
-pop bp
-mov ax, cx
-add ax, word ptr[bp-4]
-mov t1, ax
-mov ax, t1
-add ax, word ptr[bp-6]
-mov t2, ax
-mov ax, t2
-mov  x12, ax
-; return stmt of line: 9
-mov cx, x12
-pop di
-pop dx
-pop bx
-pop ax
-ret
-g endp
-
-
 main proc
 mov ax,@data
 mov ds,ax
 mov bp,sp
-; expr from line: 14
+; expr from line: 3
+mov ax, 0
+mov  b11, ax
+; expr from line: 4
 mov ax, 1
-mov  a13, ax
-; expr from line: 15
-mov ax, 2
-mov  b13, ax
-; expr from line: 16
-; function call, line: 16
-push bp
-push a13
-push b13
-call g
-pop b13
-pop a13
-pop bp
-mov ax, cx
-mov  a13, ax
-; println() of line: 17
-mov ax, a13
+mov  c11, ax
+; for-loop of line: 10
+; expr from line: 5
+mov ax, 0
+mov  i11, ax
+L4:
+; expr from line: 5
+mov ax, i11
+cmp ax, 4
+jl L0
+mov t0, 0
+jmp L1
+L0:
+mov t0, 1
+L1:
+mov ax, t0
+cmp ax, 0
+je L5
+mov ax, i11
+mov t1, ax
+inc i11
+; expr from line: 6
+mov ax, 3
+mov  a11, ax
+; while-loop of line: 9
+L2:
+mov ax, a11
+mov t2, ax
+dec a11
+mov ax, t2
+cmp ax, 0
+je L3
+; expr from line: 8
+mov ax, b11
+mov t3, ax
+inc b11
+jmp L2
+L3:
+jmp L4
+L5:
+; println() of line: 11
+mov ax, a11
+mov print_var, ax
+call print
+; println() of line: 12
+mov ax, b11
+mov print_var, ax
+call print
+; println() of line: 13
+mov ax, c11
 mov print_var, ax
 call print
 exit:
