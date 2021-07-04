@@ -12,4 +12,3 @@ int main(){
     println(b);
     println(c);
 }
-

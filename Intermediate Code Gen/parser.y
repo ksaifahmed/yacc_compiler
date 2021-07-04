@@ -4,6 +4,8 @@ using namespace std;
 #include<cstdlib>
 #include<string>
 #include<cmath>
+#include <bits/stdc++.h>
+#include <algorithm>
 #include "symboltable.h"
 
 
@@ -37,7 +39,19 @@ vector<string> asm_args;
 int labelCount=0;
 int tempCount=0;
 
+vector<string> input;
+string jumpL = "";
 
+bool isNumber(string s)
+{
+	//cout << "\ns" << s << "s\n";
+    for(int i=0; i<s.length(); i++)
+    {
+        char c = s[i];
+        if(c>57 || c<47) return false;
+    }
+    return true;
+}
 
 char *newLabel()
 {
@@ -155,9 +169,242 @@ string PrintFunction(){
 	return "\n\nprint PROC\n\tpush ax\n\tpush bx \n\tpush cx\n\tpush dx\n\tmov ax, print_var \n\tcmp ax,32767\n\tjbe POS \n\tpush ax\n\tmov ah,2\n\tmov dl,'-'\n\tint 21h\n\tpop ax  \n\tneg ax\nPOS: \n\tmov bx, 10\n\tmov cx, 0\nprintLabel1:\n\tmov dx, 0\n\tdiv bx\n\tpush dx\n\tinc cx\n\tcmp ax, 0\n\tjne printLabel1\nprintLabel2:\n\tmov ah, 2\n\tpop dx\n\tadd dl, '0'\n\tint 21h\n\tdec cx\n\tcmp cx, 0\n\tjne printLabel2\n\tmov dl, 0Ah\n\tint 21h\n\tmov dl, 0Dh\n\tint 21h\n\tpop dx\n\tpop cx\n\tpop bx\n\tpop ax\n\tret\nprint endp\n\n";
 	}
 
+string getNegJump(string j)	
+{
+    if(!j.compare("jl")) return "jge";
+    if(!j.compare("jg")) return "jle";
+    if(!j.compare("jle")) return "jg";
+    if(!j.compare("jge")) return "jl";
+    if(!j.compare("je")) return "jne";
+    if(!j.compare("jne")) return "je";
+}
+
+vector<string> split(string text)
+{
+    vector<string> words{};
+    char space_char = ' ';
+
+    stringstream sstream(text);
+    string word;
+    while (std::getline(sstream, word, space_char)){
+        words.push_back(word);
+    }
+    return words;
+}
+
+bool loopOptimizable(vector<string>::iterator it)
+{
+    string s = *it; vector<string> temp = split(s);
+    string a = temp.at(0), b, c;
+    string j, s1, s2, s3 = "adadadad";
+    string fj, l;
+    if(a.compare("mov")) return false;
+    it++;
+    s = *it; temp = split(s);
+    a = temp.at(0);
+    if(a.compare("cmp")) return false;
+    it++;
+    s = *it; temp = split(s);
+    j = temp.at(0); //known jump
+
+    it++;
+    s = *it; temp = split(s);
+    if(temp.size() != 3) return false;
+    a = temp.at(0), s1 = temp.at(1);
+    if(a.compare("mov") || s1[0] != 't') return false;
+
+    it++;
+    s = *it; temp = split(s);
+    a = temp.at(0);
+    if(a.compare("jmp")) return false;
+
+
+    it++; it++;
+    s = *it; temp = split(s);
+    if(temp.size() != 3) return false;
+    a = temp.at(0), s2 = temp.at(1);
+    if(a.compare("mov") || s2[0] != 't') return false;
+
+
+    it++; it++;
+    s = *it; temp = split(s);
+    a = temp.at(0); s3 = "";
+    if(temp.size() != 3) return false;
+    if(a.compare("mov")) return false;
+    s3 = temp.at(2)+',';
+
+
+    it++;
+    s = *it; temp;
+    if(s.compare("cmp ax, 0")) return false;
+
+    it++;
+    s = *it; temp = split(s);
+    fj = temp.at(0); l = temp.at(1);
+    if(temp.size() != 2) return false;
+    if(fj.compare("je")) return false;
+    jumpL = l;
+    return true;
+
+}
+
+bool redundantMov(vector<string>::iterator it)
+{
+    string s = *it;
+    vector<string> temp = split(s); vector<string> next;
+    if(temp.size() != 3) return false;
+    if(!temp.at(0).compare("mov"))
+    {
+        it++;
+        next = split(*it); it--;
+        if(next.size() == 3 && !next.at(0).compare("mov"))
+        {
+            string a = temp.at(1), b = temp.at(2)+ ',';
+            string d = next.at(1), c = next.at(2) + ',';
+            if(!a.compare(c) && !b.compare(d)) return true;
+        }
+    }
+    return false;
+}
+
+bool redundantArith(vector<string>::iterator it)
+{
+    string s = *it;
+    vector<string> temp = split(s); vector<string> next;
+    if(temp.size() != 3) return false;
+    if(!temp.at(0).compare("mov"))
+    {
+        it++;
+        next = split(*it); it--;
+        if(next.size() != 3) return false;
+        string a = temp.at(1), b = temp.at(2);
+        string d = next.at(1), c = next.at(2) + ',';
+        string op = next.at(0);
+        if(!b.compare("0") && !d.compare(c))
+        {
+            if(!op.compare("add") || !op.compare("sub")) return true;
+        }
+    }
+    return false;
+}
+
+string redundantMul(vector<string>::iterator it)
+{
+    string s = *it;
+    vector<string> temp = split(s); vector<string> next;
+    if(!temp.at(0).compare("mul"))
+    {
+        it--; it--;
+        temp = split(*it);
+        s = temp.at(2);
+        if(!s.compare("1")){
+            it++;
+            temp = split(*it);
+            s = temp.at(2);
+            it++; return s;
+        }it++; temp = split(*it);
+        if(!temp.at(2).compare("1")){
+            it++;  return s;
+        }
+    }
+    return "";
+}
+
+
 void generateOptimizedCode()
 {
-	
+    //reading input code.asm
+    cout << "Optimizing code..." << endl;
+    ifstream in("code.asm");
+    string str;
+    while (getline(in, str))
+    {
+        if(str.size() > 0)
+            input.push_back(str);
+    }
+
+
+    //redundant arithmetic op
+    auto it = input.begin(); string temp;
+    while (it != input.end())
+    {
+        if(redundantArith(it))
+        {
+            it++;
+            it = input.erase(it);
+            continue;
+        }
+        temp = redundantMul(it);
+        if(temp.compare("")){
+            temp = "mov ax, "+temp;
+            --it; --it;
+            it = input.erase(it);
+            it = input.erase(it);
+            it = input.erase(it);
+            input.insert(it, temp);
+        }
+        else ++it;
+    }
+
+    //unreachable code after return
+    it = input.begin();
+    while (it != input.end())
+    {
+        string s = *it;
+        vector<string> temp;
+        if(!s.compare("ret"))
+        {
+            it++;
+            while(1)
+            {
+                s = *it; temp = split(s);
+                //cout << s << endl;
+                if(temp.size() == 2)
+                {
+                    s = temp.at(1);
+                    if(!s.compare("endp")) break;
+                }
+                it = input.erase(it);
+            }
+        }
+        else it++;
+    }
+
+    it = input.begin();
+    while (it != input.end())
+    {
+        if(loopOptimizable(it))
+        {
+            it++; it++;
+            vector<string> temp = split(*it);
+            input.insert(it, getNegJump(temp.at(0))+" "+jumpL);
+            it++;
+            for(int i=0; i<9; i++) it = input.erase(it);
+        }
+        it++;
+    }
+
+
+    //redundant mov
+    it = input.begin();
+    while (it != input.end())
+    {
+        if(redundantMov(it))
+        {
+            it++;
+            it = input.erase(it);
+        }
+        else ++it;
+    }
+
+    freopen("optimized code.asm", "w", stdout);
+    it = input.begin();
+    while(it != input.end())
+    {
+        cout << *it << endl;
+        it++;
+    }
+    fclose(stdout);
 }
 
 %}
@@ -1168,8 +1415,15 @@ arguments : arguments COMMA logic_expression
 			args.push_back($3->getDataType());
 			
 			$$->code +=$1->code + $3->code;
-			asm_args.push_back($3->symbol);
-			$$->code += "push " + $3->symbol + "\n";
+			if(isNumber($3->symbol))
+			{
+				char * t = newTemp();
+				$$->code += "mov ax, " + $3->symbol + "\n";
+				$$->code += "mov " + string(t) + ", ax\n";
+				$3->symbol = string(t);				
+				asm_args.push_back($3->symbol);				
+			}else asm_args.push_back($3->symbol);
+			$$->code += "push x" + $3->symbol + "x\n";
 			
 		}
 	      | logic_expression 
@@ -1178,8 +1432,16 @@ arguments : arguments COMMA logic_expression
 			args.push_back($1->getDataType());
 			
 			$$->code += $1->code;
-			asm_args.push_back($1->symbol);
+			if(isNumber($1->symbol))
+			{
+				char * t = newTemp();
+				$$->code += "mov ax, " + $1->symbol + "\n";
+				$$->code += "mov " + string(t) + ", ax\n";
+				$1->symbol = string(t);
+				asm_args.push_back($1->symbol);												
+			}else asm_args.push_back($1->symbol);							
 			$$->code += "push " + $1->symbol + "\n";
+			
 	      }
 	      ;
 	      
@@ -1219,12 +1481,8 @@ int main(int argc,char *argv[])
 	fclose(err);
 	fclose(ac);
 	
-	oac = fopen("optimized code.asm", "w");
-	ac = fopen("code.asm", "r");
+
 	generateOptimizedCode();
-	
-	fclose(ac);
-	fclose(oac);
 	
 	return 0;
 }

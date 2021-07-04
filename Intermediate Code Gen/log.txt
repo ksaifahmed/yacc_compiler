@@ -634,13 +634,13 @@ printf(c);
 
 
 
-Line 16: start : program
+Line 15: start : program
 
 
 ScopeTable # 1
  1 --> < main , ID > 
 
 
-Total lines: 16
+Total lines: 15
 Total errors: 0
 
