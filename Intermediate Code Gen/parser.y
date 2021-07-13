@@ -826,8 +826,8 @@ statement : var_declaration
 		$$->code += "mov ax, " + $4->symbol + "\n";
 		$$->code += "cmp ax, 0\n";
 		$$->code += "je " + string(exit_label) + "\n";
-		$$->code += $5->code;
 		$$->code += $7->code;
+		$$->code += $5->code;
 		$$->code += "jmp " + string(for_loop) + "\n";
 		$$->code += string(exit_label)+":\n";
 				
@@ -896,7 +896,7 @@ statement : var_declaration
 	 	fprintf(lg, "%s\n\n", name.c_str());
 	 	
 	 	$$->code += "; println() of line: " + to_string(line_count) + "\n";
-	 	string code_ = "mov ax, " + $3->getName()+symbolTable->getID() + "\n";
+	 	string code_ = "mov ax, " + $3->getName()+ symbolTable -> Lookup_ID($3->getName()) + "\n";
 	 	code_ += "mov print_var, ax\n";
 	 	code_ += "call print\n";
 	 	$$->code += code_;
@@ -1423,7 +1423,7 @@ arguments : arguments COMMA logic_expression
 				$3->symbol = string(t);				
 				asm_args.push_back($3->symbol);				
 			}else asm_args.push_back($3->symbol);
-			$$->code += "push x" + $3->symbol + "x\n";
+			$$->code += "push " + $3->symbol + "\n";
 			
 		}
 	      | logic_expression 
